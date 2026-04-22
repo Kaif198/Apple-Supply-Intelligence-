@@ -1,5 +1,13 @@
 # Render.com blueprint for the ASCIIP API.
 # The web frontend deploys separately via Vercel (see vercel.json).
+#
+# Free tier constraints (enforced by Render blueprint validation):
+#   * persistent disks are not allowed
+#   * cron services are not allowed
+# The API uses ephemeral writable paths under /tmp/asciip; the DuckDB feature
+# store is rebuilt from the parquet snapshots baked into the image on every
+# cold start. Scheduled ingestion runs via the GitHub Actions workflow
+# `.github/workflows/ingest.yml`, not a Render cron.
 
 services:
   - type: web
@@ -18,11 +26,11 @@ services:
       - key: ASCIIP_LOG_PRETTY
         value: "false"
       - key: ASCIIP_DATA_DIR
-        value: /data
+        value: /tmp/asciip
       - key: ASCIIP_DUCKDB_PATH
-        value: /data/features/asciip.duckdb
+        value: /tmp/asciip/features/asciip.duckdb
       - key: ASCIIP_SNAPSHOTS_DIR
-        value: /data/snapshots
+        value: /tmp/asciip/snapshots
       - key: ASCIIP_CORS_ORIGINS
         sync: false
       - key: FRED_API_KEY
@@ -35,37 +43,3 @@ services:
         sync: false
       - key: ASCIIP_ALERT_WEBHOOK_URL
         sync: false
-    disk:
-      name: asciip-data
-      mountPath: /data
-      sizeGB: 1
-
-# Cron job: run ingestion every 6 hours.
-  - type: cron
-    name: asciip-ingest
-    runtime: docker
-    plan: free
-    region: oregon
-    branch: main
-    dockerfilePath: apps/api/Dockerfile
-    dockerContext: .
-    schedule: "0 */6 * * *"
-    dockerCommand: python -m asciip_data_pipeline.orchestrator
-    envVars:
-      - fromGroup: asciip-shared-env
-    disk:
-      name: asciip-data
-      mountPath: /data
-      sizeGB: 1
-
-envVarGroups:
-  - name: asciip-shared-env
-    envVars:
-      - key: ASCIIP_ENV
-        value: production
-      - key: ASCIIP_DATA_DIR
-        value: /data
-      - key: ASCIIP_DUCKDB_PATH
-        value: /data/features/asciip.duckdb
-      - key: ASCIIP_SNAPSHOTS_DIR
-        value: /data/snapshots
