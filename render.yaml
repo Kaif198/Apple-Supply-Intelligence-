@@ -38,7 +38,7 @@ services:
       - key: ASCIIP_EXPORTS_DIR
         value: /tmp/asciip/exports
       - key: ASCIIP_CORS_ORIGINS
-        sync: false
+        value: "https://apple-supply-intelligence-web.vercel.app,http://localhost:3000"
       - key: FRED_API_KEY
         sync: false
       - key: MARKETAUX_API_KEY
