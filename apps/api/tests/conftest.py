@@ -43,7 +43,7 @@ def seeded_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return root
 
 
-@pytest.fixture()
+@pytest.fixture
 def client(seeded_dir: Path) -> Iterator[TestClient]:
     # Fresh cache between tests.
     from asciip_api.cache import get_cache

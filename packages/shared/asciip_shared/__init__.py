@@ -36,9 +36,9 @@ from asciip_shared.provenance import (
 )
 
 __all__ = [
-    "CORRELATION_ID_HEADER",
     "COMMODITY_CODES",
     "COMMODITY_ORDER",
+    "CORRELATION_ID_HEADER",
     "SEVERITY_CLASSES",
     "SEVERITY_THRESHOLDS_USD",
     "ASCIIPError",
@@ -50,8 +50,8 @@ __all__ = [
     "ProblemDetail",
     "ProvenanceEntry",
     "ProvenanceKind",
-    "SeverityClass",
     "Settings",
+    "SeverityClass",
     "SourceMetadata",
     "ValidationError",
     "bind_correlation_id",

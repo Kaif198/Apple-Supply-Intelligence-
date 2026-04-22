@@ -7,8 +7,13 @@ requires-python = ">=3.11,<3.13"
 license = { text = "Proprietary" }
 authors = [{ name = "ASCIIP Team" }]
 
-# Workspace root has no direct runtime dependencies; each member declares its own.
-dependencies = []
+# Root depends on all workspace members so `uv sync` installs them into the venv.
+dependencies = [
+  "asciip-shared",
+  "asciip-data-pipeline",
+  "asciip-ml-models",
+  "asciip-api",
+]
 
 [project.optional-dependencies]
 dev = [

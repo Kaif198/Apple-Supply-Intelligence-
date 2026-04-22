@@ -571,8 +571,7 @@ def estimate_commodity_ate(payload: dict[str, Any]) -> dict[str, Any]:
 def list_alerts(*, unacknowledged_only: bool = False, limit: int = 100) -> dict[str, Any]:
     store = get_feature_store()
     sql = (
-        "SELECT id, created_at, event_id, severity, acknowledged_at, channel, payload "
-        "FROM alerts "
+        "SELECT id, created_at, event_id, severity, acknowledged_at, channel, payload FROM alerts "
     )
     if unacknowledged_only:
         sql += "WHERE acknowledged_at IS NULL "

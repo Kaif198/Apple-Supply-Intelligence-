@@ -178,7 +178,7 @@ def train_distress_classifier(
         roc_auc=roc_auc,
         pr_auc=pr_auc,
         brier=brier,
-        n_samples=int(len(y)),
+        n_samples=len(y),
         n_positive=int(y.sum()),
     )
 
@@ -192,7 +192,7 @@ def train_distress_classifier(
                     "roc_auc": roc_auc,
                     "pr_auc": pr_auc,
                     "brier": brier,
-                    "n_samples": int(len(y)),
+                    "n_samples": len(y),
                     "n_positive": int(y.sum()),
                 },
                 hyperparameters={

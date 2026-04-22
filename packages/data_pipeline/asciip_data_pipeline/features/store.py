@@ -149,8 +149,7 @@ class FeatureStore:
                     view = f"raw_{source_dir.name}"
                     pattern = (source_dir / "*.parquet").as_posix()
                     con.execute(
-                        f"CREATE OR REPLACE VIEW {view} AS "
-                        f"SELECT * FROM read_parquet('{pattern}')"
+                        f"CREATE OR REPLACE VIEW {view} AS SELECT * FROM read_parquet('{pattern}')"
                     )
                     raw_names.add(source_dir.name)
 

@@ -213,7 +213,7 @@ def train_margin_ridge(
 ) -> MarginTrainingResult:
     """Fit the Ridge + optional registration."""
     log = get_logger("asciip.ml.margin")
-    X, y, timestamps = build_training_frame()
+    X, y, _timestamps = build_training_frame()
 
     # Column-wise impute with median so early quarters without a full feature
     # set do not dominate the loss.

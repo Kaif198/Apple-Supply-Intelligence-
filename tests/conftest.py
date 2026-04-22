@@ -18,7 +18,7 @@ def _reset_settings_cache() -> Iterator[None]:
     reset_settings_cache()
 
 
-@pytest.fixture()
+@pytest.fixture
 def tmp_data_dir(tmp_path, monkeypatch: pytest.MonkeyPatch):
     """Point ASCIIP_* path envs at an isolated temp tree."""
     for sub in ("raw", "features", "models", "exports", "snapshots"):

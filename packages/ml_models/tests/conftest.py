@@ -13,7 +13,7 @@ import pytest
 from asciip_shared.config import reset_settings_cache
 
 
-@pytest.fixture()
+@pytest.fixture
 def tmp_data_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     for sub in ("raw", "features", "models", "exports", "snapshots"):
         (tmp_path / sub).mkdir(parents=True, exist_ok=True)
@@ -37,7 +37,7 @@ def tmp_data_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return tmp_path
 
 
-@pytest.fixture()
+@pytest.fixture
 def seeded_feature_store(tmp_data_dir: Path):
     """Materialise the full feature set end-to-end."""
     from asciip_data_pipeline import synthetic

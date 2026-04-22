@@ -60,9 +60,9 @@ _LATEST = date(2026, 1, 1)
 def test_no_future_leak_at_random_cutoffs(built_store, days: int) -> None:  # type: ignore[no-untyped-def]
     cutoff = datetime.combine(_EARLIEST + timedelta(days=days), datetime.min.time(), tzinfo=UTC)
     rows = point_in_time_frame(as_of=cutoff)
-    assert all(
-        r["as_of_ts"] <= cutoff for r in rows
-    ), f"point_in_time_frame leaked rows after {cutoff}"
+    assert all(r["as_of_ts"] <= cutoff for r in rows), (
+        f"point_in_time_frame leaked rows after {cutoff}"
+    )
 
 
 def test_assert_no_leak_helper(built_store) -> None:  # type: ignore[no-untyped-def]

@@ -5,7 +5,7 @@ Public XML feed at sdw-wsrest.ecb.europa.eu. No auth, no rate limit.
 
 from __future__ import annotations
 
-import xml.etree.ElementTree as ET  # noqa: N817
+import xml.etree.ElementTree as ET
 from datetime import date
 from typing import ClassVar
 

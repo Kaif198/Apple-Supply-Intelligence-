@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 pytestmark = pytest.mark.integration
 
 
-@pytest.fixture()
+@pytest.fixture
 def client() -> TestClient:
     return TestClient(app)
 

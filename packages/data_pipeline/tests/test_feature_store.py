@@ -14,7 +14,7 @@ from asciip_shared.config import reset_settings_cache
 pytestmark = [pytest.mark.integration, pytest.mark.req_3, pytest.mark.req_17]
 
 
-@pytest.fixture()
+@pytest.fixture
 def seeded_store(tmp_data_dir: Path):
     # Seed snapshots so refresh_views has something to point at.
     synthetic.write_snapshots(tmp_data_dir / "snapshots")

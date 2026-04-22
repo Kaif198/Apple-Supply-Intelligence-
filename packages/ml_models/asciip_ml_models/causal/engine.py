@@ -88,7 +88,7 @@ def _double_ml_ate(cfg: CausalConfig) -> CausalEstimate:
     dof = max(len(T) - 1, 1)
     var = float(np.sum((T_resid**2) * (resid**2)) / (np.sum(T_resid**2) ** 2) * dof / (dof - 0))
     se = float(np.sqrt(max(var, 0.0)))
-    log.info("causal.dml", ate=ate, se=se, n=int(len(T)))
+    log.info("causal.dml", ate=ate, se=se, n=len(T))
 
     return CausalEstimate(
         method="double_ml",
@@ -96,7 +96,7 @@ def _double_ml_ate(cfg: CausalConfig) -> CausalEstimate:
         std_error=se,
         ci_low=ate - 1.96 * se,
         ci_high=ate + 1.96 * se,
-        n_obs=int(len(T)),
+        n_obs=len(T),
         refutations={},
         assumptions=(
             "Unconfoundedness given the provided covariates.",

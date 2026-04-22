@@ -107,7 +107,7 @@ def _materialize_plan(con: duckdb.DuckDBPyConnection, plan: WidePlan, git_sha: s
             f"WHERE {col} IS NOT NULL"
         )
         result = con.execute(sql, [feature_name, git_sha])
-        inserted += result.fetchall() and 0 or 0  # DuckDB does not return rowcount here
+        inserted += (result.fetchall() and 0) or 0  # DuckDB does not return rowcount here
     return inserted
 
 
