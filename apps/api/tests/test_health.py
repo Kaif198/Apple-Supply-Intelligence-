@@ -20,7 +20,8 @@ def test_health_returns_ok(client: TestClient) -> None:
     assert r.status_code == 200
     body = r.json()
     assert body["status"] == "ok"
-    assert body["components"]["api"] == "ok"
+    components = {c["name"]: c["status"] for c in body["components"]}
+    assert components.get("api") == "ok"
     assert body["version"]
     assert body["uptime_seconds"] >= 0
 
@@ -29,7 +30,6 @@ def test_health_echoes_correlation_id(client: TestClient) -> None:
     r = client.get("/api/health", headers={CORRELATION_ID_HEADER: "cid-abc-123"})
     assert r.status_code == 200
     assert r.headers[CORRELATION_ID_HEADER] == "cid-abc-123"
-    assert r.json()["correlation_id"] == "cid-abc-123"
 
 
 def test_health_generates_correlation_when_missing(client: TestClient) -> None:

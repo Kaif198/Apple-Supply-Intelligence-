@@ -6,20 +6,16 @@ import pytest
 from asciip_shared.config import Settings, get_settings, reset_settings_cache
 from asciip_shared.exceptions import ConfigurationError
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.req_22]
 
 
 def test_defaults_load_without_any_env(monkeypatch: pytest.MonkeyPatch) -> None:
     # Ensure nothing from a developer's real .env bleeds in.
-    for key in list(monkeypatch._setitem.keys() if hasattr(monkeypatch, "_setitem") else []):
-        monkeypatch.delenv(key, raising=False)
-    for key in (
-        "ASCIIP_ENV",
-        "ASCIIP_LOG_LEVEL",
-        "ASCIIP_DCF_WACC",
-        "FRED_API_KEY",
-    ):
-        monkeypatch.delenv(key, raising=False)
+    import os
+
+    for key in list(os.environ):
+        if key.startswith("ASCIIP_") or key.endswith("_API_KEY"):
+            monkeypatch.delenv(key, raising=False)
     reset_settings_cache()
     s = Settings()  # type: ignore[call-arg]
     assert s.env == "development"

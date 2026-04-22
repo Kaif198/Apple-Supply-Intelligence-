@@ -77,10 +77,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       className={`${inter.variable} ${jetBrainsMono.variable}`}
     >
       <head>
-        <script
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
-        />
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="min-h-dvh bg-bg-canvas font-sans text-fg antialiased">
         <Providers>{children}</Providers>

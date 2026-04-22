@@ -16,13 +16,16 @@ pytestmark = pytest.mark.unit
 
 
 def test_default_is_empty_when_no_binding() -> None:
-    # Each test starts with a fresh context — contextvars don't leak across pytests
-    # executed in different processes, but can leak within one process. Bind and reset.
-    token = bind_correlation_id("")
+    # The ContextVar declares default="" and ``bind_correlation_id`` treats
+    # empty/None as "generate a fresh id", so we verify the default directly.
+    # Reset any leaked binding from earlier tests in the same process.
+    from asciip_shared.correlation import _correlation_id
+
+    token = _correlation_id.set("")
     try:
-        assert get_correlation_id() == ""
+        assert _correlation_id.get() == ""
     finally:
-        reset_correlation_id(token)
+        _correlation_id.reset(token)
 
 
 def test_bind_and_get_roundtrip() -> None:

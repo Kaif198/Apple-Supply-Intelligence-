@@ -147,7 +147,7 @@ warn_return_any = false
 
 [tool.pytest.ini_options]
 minversion = "8.0"
-addopts = "-ra --strict-markers --strict-config"
+addopts = "-ra --strict-markers --strict-config --import-mode=importlib"
 testpaths = ["tests", "apps/api/tests", "packages"]
 asyncio_mode = "auto"
 markers = [

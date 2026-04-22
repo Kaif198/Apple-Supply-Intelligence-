@@ -99,6 +99,11 @@ def normalize_supplier_name(name: str) -> str:
     if not name:
         return ""
     cleaned = _PUNCT_RE.sub(" ", name).strip()
+    # Check alias map before suffix stripping so entries like
+    # "foxconn technology group" resolve before the "group" suffix is stripped.
+    pre_key = cleaned.lower()
+    if pre_key in _ALIASES:
+        return _ALIASES[pre_key]
     stripped = _strip_suffix(cleaned)
     key = stripped.lower()
     if key in _ALIASES:

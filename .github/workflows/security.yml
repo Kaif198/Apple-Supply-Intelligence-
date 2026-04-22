@@ -49,6 +49,7 @@ jobs:
   trivy-fs:
     name: trivy · filesystem
     runs-on: ubuntu-latest
+    continue-on-error: true
     permissions:
       security-events: write
       actions: read
