@@ -43,6 +43,17 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     log = get_logger("asciip.api.lifecycle")
     settings = get_settings()
 
+    # Seed ephemeral data dirs + snapshots on cold start. Safe to run on every
+    # boot — bootstrap is idempotent and skips regeneration when snapshots
+    # already exist. Critical on free-tier hosts (e.g. Render) where there is
+    # no persistent disk so ./data/* defaults cannot be used.
+    try:
+        from asciip_data_pipeline.bootstrap import main as bootstrap_main
+
+        bootstrap_main(["--seed-from-snapshots"])
+    except Exception as exc:  # pragma: no cover — surfaced via /api/health
+        log.error("api.bootstrap_failed", error=str(exc))
+
     # Ensure the DuckDB schema is migrated before any route touches it.
     try:
         get_feature_store().migrate()

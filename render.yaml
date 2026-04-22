@@ -31,6 +31,12 @@ services:
         value: /tmp/asciip/features/asciip.duckdb
       - key: ASCIIP_SNAPSHOTS_DIR
         value: /tmp/asciip/snapshots
+      - key: ASCIIP_RAW_DIR
+        value: /tmp/asciip/raw
+      - key: ASCIIP_MODELS_DIR
+        value: /tmp/asciip/models
+      - key: ASCIIP_EXPORTS_DIR
+        value: /tmp/asciip/exports
       - key: ASCIIP_CORS_ORIGINS
         sync: false
       - key: FRED_API_KEY
