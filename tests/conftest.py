@@ -33,8 +33,7 @@ def tmp_data_dir(tmp_path, monkeypatch: pytest.MonkeyPatch):
 
 
 @pytest.fixture(autouse=True, scope="session")
-def _freeze_env() -> Iterator[None]:
+def _freeze_env() -> None:
     """Pin test runs to the test environment so fail-fast is strict."""
     os.environ.setdefault("ASCIIP_ENV", "test")
     os.environ.setdefault("ASCIIP_LOG_PRETTY", "false")
-    return

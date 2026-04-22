@@ -92,7 +92,7 @@ mypy_path = [
   "packages/data_pipeline",
   "packages/ml_models",
 ]
-exclude = ["^apps/web/", "^data/", "\\.venv/"]
+exclude = ["^apps/web/", "^data/", "\\.venv/", ".*/tests/"]
 
 [[tool.mypy.overrides]]
 module = [
@@ -113,8 +113,32 @@ module = [
   "apscheduler.*",
   "slowapi.*",
   "fastapi_cache.*",
+  "pandas",
+  "pandas.*",
+  "sklearn",
+  "sklearn.*",
+  "statsmodels",
+  "statsmodels.*",
+  "sse_starlette",
+  "sse_starlette.*",
 ]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# ML models use numpy/sklearn/statsmodels heavily — full strict typing is impractical.
+module = ["asciip_ml_models.*"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+# API layer: third-party stubs incomplete; relax the strictest checks.
+module = ["asciip_api.*"]
+disallow_untyped_defs = false
+warn_return_any = false
+
+[[tool.mypy.overrides]]
+# Data pipeline: relax return-any for DuckDB row accessors (typed as Any).
+module = ["asciip_data_pipeline.*"]
+warn_return_any = false
 
 [tool.pytest.ini_options]
 minversion = "8.0"

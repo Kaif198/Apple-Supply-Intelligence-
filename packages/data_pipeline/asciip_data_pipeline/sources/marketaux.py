@@ -46,7 +46,7 @@ class MarketauxNews(Source):
             "search": self._KEYWORDS,
         }
         with httpx.Client(timeout=15.0) as client:
-            r = client.get(self.source_url, params=params)
+            r = client.get(self.source_url, params=params)  # type: ignore[arg-type]
             r.raise_for_status()
             payload = r.json()
         articles = payload.get("data") or []
@@ -68,5 +68,5 @@ class MarketauxNews(Source):
 
 
 def _avg_sentiment(entities: list[dict[str, object]]) -> float:
-    scores = [float(e.get("sentiment_score") or 0.0) for e in entities]
+    scores = [float(e.get("sentiment_score") or 0.0) for e in entities]  # type: ignore[arg-type]
     return float(sum(scores) / len(scores)) if scores else 0.0

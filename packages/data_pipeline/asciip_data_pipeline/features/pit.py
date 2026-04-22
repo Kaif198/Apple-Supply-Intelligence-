@@ -62,7 +62,7 @@ def point_in_time_frame(
             "ORDER BY as_of_ts, entity_id, feature_name",
             params,
         ).fetchall()
-        columns = [d[0] for d in con.description]
+        columns = [d[0] for d in con.description or []]
 
     return [dict(zip(columns, row, strict=True)) for row in rows]
 

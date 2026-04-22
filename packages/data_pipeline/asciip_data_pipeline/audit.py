@@ -91,8 +91,8 @@ def latest_audit_rows(limit: int = 50) -> list[dict[str, object]]:
             "SELECT * FROM ingestion_audit ORDER BY fetched_at DESC LIMIT ?",
             [limit],
         ).fetchall()
-        columns = [d[0] for d in con.description]
-    return [dict(zip(columns, row, strict=True)) for row in result]
+        columns = [d[0] for d in con.description or []]
+    return [dict(zip(columns, row, strict=True)) for row in (result or [])]
 
 
 def snapshot_parquet_sidecar(path: Path, sha256: str) -> Path:

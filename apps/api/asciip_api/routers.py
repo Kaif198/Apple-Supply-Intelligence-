@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import AsyncGenerator, Callable
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Literal
 
 from asciip_shared import get_settings
 from fastapi import APIRouter, HTTPException, Path, Query, Request, Response, status
@@ -55,7 +56,7 @@ def _cached_json(
     *,
     key: str,
     ttl_seconds: float,
-    producer,
+    producer: Callable[[], Any],
 ) -> Any:
     """Shared ETag + watermark cache wrapper."""
     watermark = current_watermark()
@@ -97,7 +98,9 @@ async def health() -> HealthResponse:
     except Exception as exc:  # pragma: no cover — surfaces degraded state
         components.append(HealthComponent(name="feature_store", status="degraded", detail=str(exc)))
 
-    overall = "ok" if all(c.status == "ok" for c in components) else "degraded"
+    overall: Literal["ok", "degraded"] = (
+        "ok" if all(c.status == "ok" for c in components) else "degraded"
+    )
     return HealthResponse(
         status=overall,
         service=settings.service_name,
@@ -351,7 +354,7 @@ async def stream_events(
     appears in ``disruption_events``.
     """
 
-    async def generator():
+    async def generator() -> AsyncGenerator[dict[str, str], None]:
         seen: set[str] = set()
         while True:
             if await request.is_disconnected():

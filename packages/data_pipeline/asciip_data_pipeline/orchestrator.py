@@ -103,7 +103,7 @@ async def run_once() -> list[SourceMetadata]:
         if isinstance(outcome, Exception):
             log.error("orchestrator.error", source=src.name, error=str(outcome))
             continue
-        successes.append(outcome)
+        successes.append(outcome)  # type: ignore[arg-type]
 
     log.info(
         "orchestrator.done",

@@ -92,7 +92,7 @@ class AppleSupplierPDF(Source):
             href = (link.attributes.get("href") or "").strip()
             if "supplier-list" in href.lower() or "supplier_list" in href.lower():
                 return (
-                    httpx.URL(href, scheme="https", host="www.apple.com").human_repr()
+                    str(httpx.URL(href, scheme="https", host="www.apple.com"))
                     if href.startswith("/")
                     else href
                 )

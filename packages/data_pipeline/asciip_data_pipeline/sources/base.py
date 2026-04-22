@@ -127,7 +127,7 @@ class Source(abc.ABC):
             self.log.exception("source.unexpected_error", source=self.name)
             raise DataSourceError(f"{self.name}: {exc}", detail={"source": self.name}) from exc
 
-        payload = df.write_ipc(None, compression="uncompressed").getvalue()  # type: ignore[union-attr]
+        payload = df.write_ipc(None, compression="uncompressed").getvalue()
         meta = SourceMetadata(
             source_name=self.name,
             source_url=self.source_url,

@@ -177,7 +177,7 @@ def get_settings() -> Settings:
     startup if their environment is misconfigured.
     """
     try:
-        return Settings()  # type: ignore[call-arg]
+        return Settings()
     except PydanticValidationError as exc:
         raise ConfigurationError(
             "invalid ASCIIP configuration",
