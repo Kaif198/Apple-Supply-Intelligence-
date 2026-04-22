@@ -1,0 +1,76 @@
+# Render.com blueprint for the ASCIIP API.
+# The web frontend deploys separately via Vercel (see vercel.json).
+
+services:
+  - type: web
+    name: asciip-api
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: main
+    dockerfilePath: apps/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: ASCIIP_ENV
+        value: production
+      - key: ASCIIP_LOG_PRETTY
+        value: "false"
+      - key: ASCIIP_DATA_DIR
+        value: /data
+      - key: ASCIIP_DUCKDB_PATH
+        value: /data/features/asciip.duckdb
+      - key: ASCIIP_SNAPSHOTS_DIR
+        value: /data/snapshots
+      - key: ASCIIP_CORS_ORIGINS
+        sync: false
+      - key: FRED_API_KEY
+        sync: false
+      - key: MARKETAUX_API_KEY
+        sync: false
+      - key: FINNHUB_API_KEY
+        sync: false
+      - key: COMTRADE_API_KEY
+        sync: false
+      - key: ASCIIP_ALERT_WEBHOOK_URL
+        sync: false
+      - key: ASCIIP_VERSION
+        fromService:
+          type: web
+          name: asciip-api
+          property: build.commit
+    disk:
+      name: asciip-data
+      mountPath: /data
+      sizeGB: 1
+
+# Cron job: run ingestion every 6 hours.
+  - type: cron
+    name: asciip-ingest
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: main
+    dockerfilePath: apps/api/Dockerfile
+    dockerContext: .
+    schedule: "0 */6 * * *"
+    dockerCommand: python -m asciip_data_pipeline.orchestrator
+    envVars:
+      - fromGroup: asciip-shared-env
+    disk:
+      name: asciip-data
+      mountPath: /data
+      sizeGB: 1
+
+envVarGroups:
+  - name: asciip-shared-env
+    envVars:
+      - key: ASCIIP_ENV
+        value: production
+      - key: ASCIIP_DATA_DIR
+        value: /data
+      - key: ASCIIP_DUCKDB_PATH
+        value: /data/features/asciip.duckdb
+      - key: ASCIIP_SNAPSHOTS_DIR
+        value: /data/snapshots

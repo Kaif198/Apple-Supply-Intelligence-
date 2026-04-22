@@ -1,0 +1,36 @@
+name: ingest
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"   # every 6 hours
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install uv==0.4.*
+      - run: uv sync --all-extras
+      - name: Ingest
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          MARKETAUX_API_KEY: ${{ secrets.MARKETAUX_API_KEY }}
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+          COMTRADE_API_KEY: ${{ secrets.COMTRADE_API_KEY }}
+        run: uv run python -m asciip_data_pipeline.orchestrator
+      - name: Open PR on material snapshot change
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: data-snapshots/${{ github.run_id }}
+          title: "chore(data): refresh snapshots"
+          commit-message: "chore(data): scheduled snapshot refresh"
+          add-paths: |
+            data/snapshots/**

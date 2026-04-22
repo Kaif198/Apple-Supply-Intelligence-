@@ -1,0 +1,48 @@
+# Build caches
+.next
+.turbo
+node_modules
+dist
+build
+coverage
+.mypy_cache
+.pytest_cache
+.ruff_cache
+.tox
+__pycache__
+*.pyc
+
+# Editor / OS
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Env + secrets
+.env
+.env.*
+!.env.example
+
+# Git
+.git
+.gitignore
+
+# Runtime data — re-seeded inside the container
+data/raw
+data/features
+data/models
+data/exports
+!data/snapshots
+
+# CI & local outputs
+htmlcov
+playwright-report
+test-results
+*.sarif
+junit-*.xml
+coverage-*.xml
+
+# Scratch files flagged in Phase 5/6 housekeeping
+apps/api/asciip_api/main.py.new
+apps/api/asciip_api/main.py.new.REMOVE
+apps/web/package.json.new

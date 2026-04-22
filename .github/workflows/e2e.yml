@@ -1,0 +1,104 @@
+name: e2e
+
+on:
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "15 6 * * 1"   # Mondays 06:15 UTC — weekly drift check
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  playwright:
+    name: playwright · web + api
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      # No external services — the API boots in-process via uvicorn.
+    steps:
+      - uses: actions/checkout@v4
+
+      # --- Python side: FastAPI backend ---
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.4.30"
+      - name: Sync Python workspace
+        run: uv sync --all-extras
+      - name: Bootstrap data
+        run: uv run python -m asciip_data_pipeline.bootstrap --seed-from-snapshots
+
+      # --- Node side: Next.js frontend ---
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        working-directory: apps/web
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Start API (background)
+        env:
+          ASCIIP_ENABLE_SCHEDULER: "false"
+          ASCIIP_LOG_PRETTY: "false"
+        run: |
+          uv run uvicorn asciip_api.main:app --host 127.0.0.1 --port 8000 &
+          echo $! > /tmp/api.pid
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:8000/api/health > /dev/null; then
+              echo "API ready"
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Build web
+        working-directory: apps/web
+        env:
+          NEXT_PUBLIC_API_URL: "http://127.0.0.1:8000/api"
+        run: pnpm run build
+
+      - name: Start web (background)
+        working-directory: apps/web
+        env:
+          NEXT_PUBLIC_API_URL: "http://127.0.0.1:8000/api"
+        run: |
+          pnpm run start -- -p 3000 &
+          echo $! > /tmp/web.pid
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:3000 > /dev/null; then
+              echo "Web ready"
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Run Playwright
+        working-directory: apps/web
+        env:
+          BASE_URL: "http://127.0.0.1:3000"
+        run: pnpm exec playwright test --reporter=list,html
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          retention-days: 7
+
+      - name: Shutdown services
+        if: always()
+        run: |
+          if [ -f /tmp/api.pid ]; then kill $(cat /tmp/api.pid) || true; fi
+          if [ -f /tmp/web.pid ]; then kill $(cat /tmp/web.pid) || true; fi

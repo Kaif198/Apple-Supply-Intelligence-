@@ -1,0 +1,24 @@
+[project]
+name = "asciip-causal"
+version = "0.1.0"
+description = "ASCIIP — Layer 4: causal DAG, DoWhy identification, econml estimation, refutation"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = { text = "Proprietary" }
+dependencies = [
+  "asciip-shared",
+  "asciip-ml-models",
+  "numpy>=2.1.0",
+  "pandas>=2.2.2",
+  "scipy>=1.14.1",
+  "networkx>=3.3",
+  "dowhy>=0.11.1",
+  "econml>=0.15.1",
+]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["asciip_causal"]

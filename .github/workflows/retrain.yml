@@ -1,0 +1,32 @@
+name: retrain
+
+on:
+  schedule:
+    # Weekly for forecasts (Saturday 02:00 UTC).
+    - cron: "0 2 * * 6"
+    # Monthly for distress (first Saturday).
+    - cron: "0 3 1-7 * 6"
+    # Quarterly for margin + stock (1st of Feb/May/Aug/Nov).
+    - cron: "0 4 1 2,5,8,11 *"
+  workflow_dispatch:
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install uv==0.4.*
+      - run: uv sync --all-extras
+      - name: Retrain all models
+        run: uv run python -m asciip_ml_models.train_all
+      - name: Open PR with new artifacts
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: models/${{ github.run_id }}
+          title: "chore(models): scheduled retrain"
+          commit-message: "chore(models): scheduled retrain"
+          add-paths: |
+            data/models/**

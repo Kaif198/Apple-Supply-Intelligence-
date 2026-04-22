@@ -1,0 +1,325 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * ASCIIP design tokens — Apple Pro dark system.
+ *
+ * Inspired by apple.com/pro, MacBook Pro, and Apple developer pages:
+ * near-black canvas (#000), elevated surfaces at #0b0b0d / #151517,
+ * hairline borders at rgba(255,255,255,0.08), SF-Pro-style typography
+ * (Inter as a close substitute), a single accent blue reserved for
+ * interactive affordances, and a muted severity ramp so alerts read
+ * without shouting.
+ *
+ * All colors are expressed as HSL triplets so Tailwind's
+ * `<alpha-value>` channel substitution works for every token.
+ */
+
+:root,
+[data-theme="dark"] {
+  /* Canvas + elevated surfaces */
+  --bg-canvas: 0 0% 0%;            /* #000 — true black, Apple hero */
+  --bg-panel: 240 4% 6%;           /* #0e0e10 — elevated card */
+  --bg-raised: 240 4% 10%;         /* #18181b — interactive hover */
+  --bg-inset: 240 5% 4%;           /* #0a0a0c — inset well */
+  --bg-overlay: 240 6% 8%;         /* #131316 — modals / popovers */
+  --bg-glass: 0 0% 0%;             /* base for frosted nav */
+
+  /* Foreground ramp */
+  --fg-default: 0 0% 98%;          /* #fafafa */
+  --fg-muted: 240 5% 72%;          /* #b6b6bc */
+  --fg-subtle: 240 4% 52%;         /* #818185 */
+  --fg-inverted: 0 0% 0%;
+
+  /* Hairline borders */
+  --border-default: 240 4% 16%;    /* #26262a */
+  --border-subtle: 240 4% 12%;     /* #1d1d20 */
+  --border-strong: 240 4% 24%;     /* #3a3a3e */
+
+  /* Accent — Apple interactive blue */
+  --accent: 211 100% 50%;          /* #0071e3 */
+  --accent-foreground: 0 0% 100%;
+  --accent-muted: 211 96% 62%;     /* #2997ff */
+
+  /* Signal & severity — saturated but not cartoonish */
+  --signal-pos: 142 70% 50%;       /* system green */
+  --signal-neg: 5 88% 58%;         /* system red */
+  --signal-warn: 36 95% 55%;       /* system orange */
+  --signal-info: 211 96% 62%;
+
+  --severity-low: 142 60% 55%;
+  --severity-medium: 36 92% 58%;
+  --severity-high: 18 90% 60%;
+  --severity-critical: 5 88% 58%;
+
+  /* Typography — `--font-inter` / `--font-jetbrains-mono` are injected by
+     next/font in `app/layout.tsx`. Fallbacks cover SSR + reduced-JS. */
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont,
+    "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial,
+    sans-serif;
+  --font-mono: var(--font-jetbrains-mono), "SF Mono", ui-monospace, Menlo,
+    Consolas, monospace;
+
+  /* Easing — Apple-style spring */
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-emph: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="light"] {
+  --bg-canvas: 0 0% 100%;
+  --bg-panel: 240 20% 99%;
+  --bg-raised: 240 14% 96%;
+  --bg-inset: 240 16% 97%;
+  --bg-overlay: 0 0% 100%;
+  --bg-glass: 0 0% 100%;
+
+  --fg-default: 240 6% 10%;
+  --fg-muted: 240 4% 32%;
+  --fg-subtle: 240 3% 48%;
+  --fg-inverted: 0 0% 100%;
+
+  --border-default: 240 6% 88%;
+  --border-subtle: 240 6% 92%;
+  --border-strong: 240 6% 74%;
+
+  --accent: 211 100% 45%;
+  --accent-foreground: 0 0% 100%;
+  --accent-muted: 211 96% 52%;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    background-color: hsl(var(--bg-canvas));
+    color: hsl(var(--fg-default));
+    font-feature-settings: "cv02", "cv03", "cv11", "ss01";
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-size: 15px;
+    line-height: 1.55;
+    letter-spacing: -0.005em;
+    min-height: 100dvh;
+  }
+
+  /* Display headings — tight tracking like apple.com */
+  h1, .h-display {
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+    font-weight: 600;
+  }
+  h2, .h-headline {
+    letter-spacing: -0.028em;
+    line-height: 1.08;
+    font-weight: 600;
+  }
+  h3 {
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    font-weight: 600;
+  }
+
+  ::selection {
+    background: hsl(var(--accent) / 0.35);
+    color: hsl(var(--fg-default));
+  }
+
+  [data-numeric],
+  .numeric {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum", "ss01";
+  }
+
+  * {
+    scrollbar-color: hsl(var(--border-strong)) transparent;
+    scrollbar-width: thin;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: hsl(var(--border-strong));
+    border-radius: 6px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Apple-style glass card */
+  .card {
+    @apply rounded-2xl border border-border-subtle bg-bg-panel/80 backdrop-blur-xl;
+    box-shadow:
+      0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+      0 30px 60px -30px rgba(0, 0, 0, 0.6);
+  }
+
+  .card-hover {
+    @apply transition-all duration-500;
+    transition-timing-function: var(--ease-spring);
+  }
+  .card-hover:hover {
+    transform: translateY(-2px);
+    border-color: hsl(var(--border-default));
+  }
+
+  /* Pill button — Apple "Learn more" style */
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-border bg-transparent px-5 py-2 text-sm font-medium text-fg transition-all;
+    transition-timing-function: var(--ease-spring);
+  }
+  .pill:hover {
+    background: hsl(var(--bg-raised));
+    border-color: hsl(var(--border-strong));
+  }
+
+  .pill-primary {
+    @apply rounded-full bg-accent px-5 py-2 text-sm font-medium text-accent-foreground transition-all;
+    transition-timing-function: var(--ease-spring);
+  }
+  .pill-primary:hover {
+    background: hsl(var(--accent-muted));
+  }
+
+  /* Eyebrow label used above section titles */
+  .eyebrow {
+    @apply inline-block text-xs font-medium uppercase tracking-[0.14em] text-accent-muted;
+  }
+
+  /* Hairline divider */
+  .hairline {
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      hsl(var(--border-default)) 20%,
+      hsl(var(--border-default)) 80%,
+      transparent
+    );
+  }
+
+  /* Frosted nav surface */
+  .glass-nav {
+    background: hsl(var(--bg-glass) / 0.72);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid hsl(var(--border-subtle));
+  }
+
+  /* Kbd used in search hint */
+  .kbd {
+    @apply inline-flex h-5 items-center rounded-md border border-border-strong bg-bg-raised px-1.5 font-mono text-[10px] text-fg-muted;
+  }
+}
+
+@layer utilities {
+  .text-numeric {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Radial glow behind heroes */
+  .hero-glow {
+    background:
+      radial-gradient(
+        ellipse 80% 60% at 50% 0%,
+        hsl(var(--accent) / 0.22) 0%,
+        hsl(var(--accent) / 0.04) 45%,
+        transparent 75%
+      );
+  }
+
+  .hero-glow-soft {
+    background:
+      radial-gradient(
+        ellipse 70% 50% at 50% 30%,
+        hsl(var(--accent) / 0.14) 0%,
+        transparent 70%
+      );
+  }
+
+  /* Subtle grain / noise to kill banding on dark gradients */
+  .grain {
+    position: relative;
+    isolation: isolate;
+  }
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+  }
+
+  /* Gradient text */
+  .text-gradient {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--fg-default)) 0%,
+      hsl(var(--fg-muted)) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .text-gradient-accent {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--fg-default)) 0%,
+      hsl(var(--accent-muted)) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Mesh grid overlay (used on valuation hero only) */
+  .mesh-grid {
+    background-image:
+      linear-gradient(to right, hsl(var(--border-subtle)) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border-subtle)) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, black 30%, transparent 80%);
+    -webkit-mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, black 30%, transparent 80%);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  /* LineChart path draw-in animation */
+  @keyframes draw-path {
+    from { stroke-dashoffset: 1; }
+    to   { stroke-dashoffset: 0; }
+  }
+
+  [data-animate-path] {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    pathLength: 1;
+    animation: draw-path 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+}

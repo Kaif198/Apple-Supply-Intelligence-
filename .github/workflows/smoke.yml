@@ -1,0 +1,26 @@
+name: smoke
+
+on:
+  workflow_run:
+    workflows: ["ci"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Base URL of the deployed API"
+        required: true
+        default: "https://asciip-api.example.com"
+
+jobs:
+  smoke:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install uv==0.4.*
+      - run: uv sync --all-extras
+      - name: Health probe
+        run: uv run python -m asciip_api.smoke --once --url "${{ inputs.base_url }}/api/health"

@@ -1,0 +1,34 @@
+[project]
+name = "asciip-ml-models"
+version = "0.1.0"
+description = "ASCIIP — Layer 4: forecasting, distress classification, margin, stock, valuation"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = { text = "Proprietary" }
+dependencies = [
+  "asciip-shared",
+  "asciip-data-pipeline",
+  "numpy>=2.1.0",
+  "pandas>=2.2.2",
+  "scikit-learn>=1.5.2",
+  "scipy>=1.14.1",
+  "lightgbm>=4.5.0",
+  "xgboost>=2.1.1",
+  "shap>=0.46.0",
+  "joblib>=1.4.2",
+  "statsmodels>=0.14.2",
+  "dowhy>=0.11.1",
+  "econml>=0.15.1",
+]
+
+[project.optional-dependencies]
+# Prophet has fragile wheels on some platforms; treat it as optional so the
+# rest of the stack installs cleanly even without a compiler toolchain.
+prophet = ["prophet>=1.1.5"]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["asciip_ml_models"]

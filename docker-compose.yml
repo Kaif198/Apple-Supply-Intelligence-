@@ -1,0 +1,73 @@
+# ASCIIP — local and prod-like composition.
+# Usage:
+#   docker compose up --build            # api + web
+#   docker compose run --rm ingest       # one-shot ingestion pass
+#   docker compose run --rm train        # retrain all ML models
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    image: asciip-api:latest
+    env_file: .env
+    environment:
+      ASCIIP_DATA_DIR: /data
+      ASCIIP_DUCKDB_PATH: /data/features/asciip.duckdb
+    ports:
+      - "8000:8000"
+    volumes:
+      - asciip-data:/data
+      - ./data/snapshots:/data/snapshots:ro
+    healthcheck:
+      test: ["CMD", "python", "-m", "asciip_api.smoke", "--once"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://api:8000
+    image: asciip-web:latest
+    env_file: .env
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  ingest:
+    image: asciip-api:latest
+    profiles: ["tools"]
+    env_file: .env
+    environment:
+      ASCIIP_DATA_DIR: /data
+      ASCIIP_DUCKDB_PATH: /data/features/asciip.duckdb
+    volumes:
+      - asciip-data:/data
+      - ./data/snapshots:/data/snapshots:ro
+    command: ["python", "-m", "asciip_data_pipeline.orchestrator"]
+
+  train:
+    image: asciip-api:latest
+    profiles: ["tools"]
+    env_file: .env
+    environment:
+      ASCIIP_DATA_DIR: /data
+      ASCIIP_DUCKDB_PATH: /data/features/asciip.duckdb
+    volumes:
+      - asciip-data:/data
+      - ./data/snapshots:/data/snapshots:ro
+    command: ["python", "-m", "asciip_ml_models.train_all"]
+
+volumes:
+  asciip-data:
+    driver: local
