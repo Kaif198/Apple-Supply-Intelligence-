@@ -72,3 +72,5 @@ test-results/
 *.pid
 .lock
 uv.lock
+*.new
+*.new.REMOVE

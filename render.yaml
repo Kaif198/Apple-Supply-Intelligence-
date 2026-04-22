@@ -35,11 +35,6 @@ services:
         sync: false
       - key: ASCIIP_ALERT_WEBHOOK_URL
         sync: false
-      - key: ASCIIP_VERSION
-        fromService:
-          type: web
-          name: asciip-api
-          property: build.commit
     disk:
       name: asciip-data
       mountPath: /data
