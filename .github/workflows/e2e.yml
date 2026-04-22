@@ -83,23 +83,25 @@ jobs:
           NEXT_PUBLIC_API_URL: "http://127.0.0.1:8000/api"
           NEXT_PUBLIC_API_BASE_URL: "http://127.0.0.1:8000"
         run: |
-          pnpm run start -- -p 3000 &
+          pnpm run start -- -p 3000 > /tmp/web.log 2>&1 &
           echo $! > /tmp/web.pid
           ready=0
-          for i in $(seq 1 30); do
+          for i in $(seq 1 90); do
             if curl -sf http://127.0.0.1:3000 > /dev/null; then
-              echo "Web ready"
+              echo "Web ready after ${i}s"
               ready=1
               break
             fi
             if ! kill -0 "$(cat /tmp/web.pid)" 2>/dev/null; then
-              echo "Web process exited before becoming ready"
+              echo "Web process exited before becoming ready. Last log:"
+              cat /tmp/web.log || true
               exit 1
             fi
             sleep 1
           done
           if [ "$ready" -ne 1 ]; then
-            echo "Web did not become ready in time"
+            echo "Web did not become ready in time. Last log:"
+            cat /tmp/web.log || true
             exit 1
           fi
 
