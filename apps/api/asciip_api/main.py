@@ -61,6 +61,34 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception as exc:  # pragma: no cover — surfaced via /api/health
         log.error("api.feature_store_migration_failed", error=str(exc))
 
+    # Train the production ML artifacts if no registry entry exists yet.
+    # Ephemeral hosts (Render free tier) lose the models/ dir on every cold
+    # start, so we rebuild them from the freshly-seeded feature store. Each
+    # step is best-effort — if one fails the matching endpoint will return
+    # 503 but the rest of the surface stays up.
+    try:
+        from asciip_data_pipeline.features.build import build as build_features
+        from asciip_ml_models.distress.classifier import (
+            load_production as load_distress,
+            train_distress_classifier,
+        )
+        from asciip_ml_models.factor.regression import (
+            load_production as load_factor,
+            train_factor_regression,
+        )
+
+        build_features()
+        log.info("api.feature_views_built")
+
+        if load_factor() is None:
+            train_factor_regression()
+            log.info("api.factor_model_trained")
+        if load_distress() is None:
+            train_distress_classifier()
+            log.info("api.distress_model_trained")
+    except Exception as exc:  # pragma: no cover — surfaced via /api/health
+        log.error("api.model_warmup_failed", error=str(exc))
+
     if settings.env == "production" and any("localhost" in o for o in settings.cors_origin_list):
         log.warning(
             "api.cors_localhost_in_production",
