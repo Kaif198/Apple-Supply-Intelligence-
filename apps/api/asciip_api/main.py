@@ -70,10 +70,14 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
         from asciip_data_pipeline.features.build import build as build_features
         from asciip_ml_models.distress.classifier import (
             load_production as load_distress,
+        )
+        from asciip_ml_models.distress.classifier import (
             train_distress_classifier,
         )
         from asciip_ml_models.factor.regression import (
             load_production as load_factor,
+        )
+        from asciip_ml_models.factor.regression import (
             train_factor_regression,
         )
 
