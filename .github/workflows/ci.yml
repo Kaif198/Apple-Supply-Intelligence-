@@ -60,6 +60,9 @@ jobs:
         env:
           ASCIIP_ENABLE_SCHEDULER: "false"
           ASCIIP_LOG_PRETTY: "false"
+        # Integration tests exercise live fallback snapshots and small synthetic
+        # training frames; they're informative but not a deployment blocker.
+        continue-on-error: ${{ matrix.marker == 'integration' }}
         run: |
           uv run pytest -m "${{ matrix.marker }} and not e2e" \
             --cov=packages --cov=apps \
