@@ -1,9 +1,6 @@
 name: smoke
 
 on:
-  workflow_run:
-    workflows: ["ci"]
-    types: [completed]
   workflow_dispatch:
     inputs:
       base_url:
@@ -13,7 +10,6 @@ on:
 
 jobs:
   smoke:
-    if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
