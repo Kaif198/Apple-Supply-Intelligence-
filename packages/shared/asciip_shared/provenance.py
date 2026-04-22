@@ -19,11 +19,11 @@ from typing import Any
 class ProvenanceKind(StrEnum):
     """How a value was obtained."""
 
-    LIVE = "live"                       # fetched from an external source just now
-    CACHE = "cache"                     # served from the API cache layer
-    SNAPSHOT = "snapshot"               # fallback Parquet snapshot
+    LIVE = "live"  # fetched from an external source just now
+    CACHE = "cache"  # served from the API cache layer
+    SNAPSHOT = "snapshot"  # fallback Parquet snapshot
     SYNTHETIC_CALIBRATION = "synthetic_calibration"  # deterministic offline calibration
-    DERIVED = "derived"                 # computed from one or more upstream provenances
+    DERIVED = "derived"  # computed from one or more upstream provenances
 
 
 @dataclass(slots=True)
@@ -70,7 +70,7 @@ class SourceMetadata:
         fallback: bool = False,
         fallback_snapshot_ts: datetime | None = None,
         notes: str = "",
-    ) -> "SourceMetadata":
+    ) -> SourceMetadata:
         return cls(
             source_name=source_name,
             source_url=source_url,
@@ -93,7 +93,7 @@ class SourceMetadata:
         fallback: bool = False,
         fallback_snapshot_ts: datetime | None = None,
         notes: str = "",
-    ) -> "SourceMetadata":
+    ) -> SourceMetadata:
         payload = path.read_bytes()
         return cls.for_bytes(
             source_name=source_name,
@@ -114,7 +114,7 @@ class ProvenanceEntry:
     source_url: str
     fetched_at: datetime
     kind: ProvenanceKind = ProvenanceKind.LIVE
-    field_path: str = ""               # dotted path within the response payload
+    field_path: str = ""  # dotted path within the response payload
     notes: str = ""
 
     @classmethod
@@ -124,10 +124,8 @@ class ProvenanceEntry:
         *,
         field_path: str = "",
         kind: ProvenanceKind | None = None,
-    ) -> "ProvenanceEntry":
-        resolved_kind = kind or (
-            ProvenanceKind.SNAPSHOT if meta.fallback else ProvenanceKind.LIVE
-        )
+    ) -> ProvenanceEntry:
+        resolved_kind = kind or (ProvenanceKind.SNAPSHOT if meta.fallback else ProvenanceKind.LIVE)
         return cls(
             source_name=meta.source_name,
             source_url=meta.source_url,

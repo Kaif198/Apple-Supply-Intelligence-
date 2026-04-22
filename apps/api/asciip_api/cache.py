@@ -104,9 +104,9 @@ def _compute_etag(key: str, watermark: datetime, value: Any) -> str:
 def _canonicalise(obj: Any) -> Any:
     if isinstance(obj, dict):
         return {k: _canonicalise(obj[k]) for k in sorted(obj)}
-    if isinstance(obj, (list, tuple)):
+    if isinstance(obj, list | tuple):
         return [_canonicalise(v) for v in obj]
-    if isinstance(obj, (datetime,)):
+    if isinstance(obj, datetime):
         return obj.isoformat()
     return obj
 

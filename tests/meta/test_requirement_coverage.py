@@ -8,12 +8,9 @@ set here.
 from __future__ import annotations
 
 import re
-import subprocess
-import sys
 from pathlib import Path
 
 import pytest
-
 
 pytestmark = pytest.mark.unit
 
@@ -23,10 +20,10 @@ pytestmark = pytest.mark.unit
 # adding the marker here AND tagging a real test with ``@pytest.mark.req_N``.
 COVERED_REQUIREMENTS: frozenset[int] = frozenset(
     {
-        1,   # Monorepo + bootstrap
-        2,   # Source adapter registry
-        3,   # Feature store + PIT correctness
-        9,   # Supplier distress classifier
+        1,  # Monorepo + bootstrap
+        2,  # Source adapter registry
+        3,  # Feature store + PIT correctness
+        9,  # Supplier distress classifier
         10,  # Margin Ridge regression
         11,  # Causal engine
         13,  # DCF valuation
@@ -45,9 +42,15 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 MARKER_RE = re.compile(r"pytest\.mark\.req_(\d+)")
 
 EXCLUDED_DIR_FRAGMENTS = (
-    "/.venv/", "/.tox/", "/.pytest_cache/",
-    "/node_modules/", "/.next/", "/.turbo/",
-    "/dist/", "/build/", "/.git/",
+    "/.venv/",
+    "/.tox/",
+    "/.pytest_cache/",
+    "/node_modules/",
+    "/.next/",
+    "/.turbo/",
+    "/dist/",
+    "/build/",
+    "/.git/",
 )
 
 
@@ -78,9 +81,7 @@ def test_every_required_marker_has_at_least_one_test() -> None:
 def test_no_unknown_markers_leak_into_tests() -> None:
     """Every ``req_N`` marker we find must live in the pyproject whitelist."""
     pyproject = (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    declared = {
-        int(m.group(1)) for m in re.finditer(r"req_(\d+):", pyproject)
-    }
+    declared = {int(m.group(1)) for m in re.finditer(r"req_(\d+):", pyproject)}
     used = _collect_req_markers()
     strays = sorted(used - declared)
     assert not strays, (

@@ -22,19 +22,18 @@ from pathlib import Path
 from typing import Any, ClassVar
 
 import polars as pl
+from asciip_shared import (
+    DataSourceError,
+    SourceMetadata,
+    get_logger,
+    get_settings,
+)
 from tenacity import (
     RetryError,
     Retrying,
     retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-)
-
-from asciip_shared import (
-    DataSourceError,
-    SourceMetadata,
-    get_logger,
-    get_settings,
 )
 
 
@@ -126,9 +125,7 @@ class Source(abc.ABC):
             return self._fallback(reason=str(exc))
         except Exception as exc:  # pragma: no cover — unexpected
             self.log.exception("source.unexpected_error", source=self.name)
-            raise DataSourceError(
-                f"{self.name}: {exc}", detail={"source": self.name}
-            ) from exc
+            raise DataSourceError(f"{self.name}: {exc}", detail={"source": self.name}) from exc
 
         payload = df.write_ipc(None, compression="uncompressed").getvalue()  # type: ignore[union-attr]
         meta = SourceMetadata(
@@ -149,9 +146,7 @@ class Source(abc.ABC):
     # ------------------------------------------------------------------ snapshot
 
     def snapshot_path(self) -> Path:
-        return self.settings.snapshots_dir / (
-            self.snapshot_filename or f"{self.name}.parquet"
-        )
+        return self.settings.snapshots_dir / (self.snapshot_filename or f"{self.name}.parquet")
 
     def _fallback(self, *, reason: str) -> SourceResult:
         path = self.snapshot_path()

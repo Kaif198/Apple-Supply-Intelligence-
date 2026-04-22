@@ -39,9 +39,7 @@ def _inject_correlation_id(_: Any, __: str, event_dict: EventDict) -> EventDict:
     return event_dict
 
 
-def _inject_service_metadata(
-    service_name: str, version: str
-) -> Processor:
+def _inject_service_metadata(service_name: str, version: str) -> Processor:
     def processor(_: Any, __: str, event_dict: EventDict) -> EventDict:
         event_dict.setdefault("service", service_name)
         event_dict.setdefault("version", version)
@@ -92,9 +90,7 @@ def configure_logging(
 
     # Route stdlib logging (uvicorn, sqlalchemy, etc.) through structlog.
     handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(
-        logging.Formatter("%(message)s")
-    )
+    handler.setFormatter(logging.Formatter("%(message)s"))
     root = logging.getLogger()
     root.handlers.clear()
     root.addHandler(handler)

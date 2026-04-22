@@ -6,11 +6,9 @@ import time
 
 import numpy as np
 import pytest
-
 from asciip_ml_models.montecarlo import MonteCarloConfig, run_simulation
 from asciip_ml_models.montecarlo.simulator import default_shocks
 from asciip_ml_models.valuation import apple_base_case, run_dcf
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.req_14]
 
@@ -101,6 +99,7 @@ def test_10k_trials_under_one_second() -> None:
 def test_summary_keys() -> None:
     result = run_simulation(_cfg(n=500, seed=3))
     summary = result.summary()
-    assert {"n_trials", "mean_price", "std_price", "percentiles",
-            "var_5pct", "cvar_5pct"} <= set(summary.keys())
+    assert {"n_trials", "mean_price", "std_price", "percentiles", "var_5pct", "cvar_5pct"} <= set(
+        summary.keys()
+    )
     assert set(summary["percentiles"].keys()) == {"5", "25", "50", "75", "95"}

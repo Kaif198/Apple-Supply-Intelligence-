@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import pytest
-from fastapi.testclient import TestClient
-
 from asciip_api.main import app
 from asciip_shared import CORRELATION_ID_HEADER
-
+from fastapi.testclient import TestClient
 
 pytestmark = pytest.mark.integration
 

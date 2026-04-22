@@ -3,12 +3,9 @@
 from __future__ import annotations
 
 import json
-from dataclasses import replace
 
 import pytest
-
 from asciip_ml_models.registry import ModelRegistration, ModelRegistry
-
 
 pytestmark = [pytest.mark.integration, pytest.mark.req_28]
 
@@ -27,7 +24,7 @@ def _reg(**kwargs) -> ModelRegistration:
     return ModelRegistration(**defaults)
 
 
-def test_register_then_list(tmp_data_dir) -> None:  # noqa: ARG001
+def test_register_then_list(tmp_data_dir) -> None:
     registry = ModelRegistry()
     record = registry.register(_reg(version="v1"))
     assert record.artifact_path.exists()
@@ -40,29 +37,32 @@ def test_register_then_list(tmp_data_dir) -> None:  # noqa: ARG001
     assert json.loads((record.artifact_path / "metrics.json").read_text())["r2"] == 0.92
 
 
-def test_promote_exclusivity(tmp_data_dir) -> None:  # noqa: ARG001
+def test_promote_exclusivity(tmp_data_dir) -> None:
     registry = ModelRegistry()
     r1 = registry.register(_reg(version="v1", promote_to_production=True))
     r2 = registry.register(_reg(version="v2", promote_to_production=True))
 
     prod = registry.get_production("unit_test_family")
-    assert prod is not None and prod.id == r2.id
+    assert prod is not None
+    assert prod.id == r2.id
 
     # Promote r1 explicitly — r2 must be demoted.
     registry.promote(r1.id)
     prod = registry.get_production("unit_test_family")
-    assert prod is not None and prod.id == r1.id
+    assert prod is not None
+    assert prod.id == r1.id
 
 
-def test_latest_orders_by_created_at(tmp_data_dir) -> None:  # noqa: ARG001
+def test_latest_orders_by_created_at(tmp_data_dir) -> None:
     registry = ModelRegistry()
     registry.register(_reg(version="v1"))
     r2 = registry.register(_reg(version="v2"))
     latest = registry.get_latest("unit_test_family")
-    assert latest is not None and latest.id == r2.id
+    assert latest is not None
+    assert latest.id == r2.id
 
 
-def test_purge_removes_artifacts_and_row(tmp_data_dir) -> None:  # noqa: ARG001
+def test_purge_removes_artifacts_and_row(tmp_data_dir) -> None:
     registry = ModelRegistry()
     record = registry.register(_reg(version="v1"))
     path = record.artifact_path
@@ -71,7 +71,7 @@ def test_purge_removes_artifacts_and_row(tmp_data_dir) -> None:  # noqa: ARG001
     assert not path.exists()
 
 
-def test_load_round_trip(tmp_data_dir) -> None:  # noqa: ARG001
+def test_load_round_trip(tmp_data_dir) -> None:
     registry = ModelRegistry()
     record = registry.register(_reg(version="v1"))
     loaded = record.load()

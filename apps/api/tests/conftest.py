@@ -8,17 +8,16 @@ lists). We cache the seeded dir at module scope to keep the suite fast.
 from __future__ import annotations
 
 import os
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 import pytest
-from fastapi.testclient import TestClient
-
 from asciip_shared.config import reset_settings_cache
+from fastapi.testclient import TestClient
 
 
 @pytest.fixture(scope="session")
-def _seeded_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
+def seeded_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
     root = tmp_path_factory.mktemp("asciip_api_data")
     for sub in ("raw", "features", "models", "exports", "snapshots"):
         (root / sub).mkdir(parents=True, exist_ok=True)
@@ -45,7 +44,7 @@ def _seeded_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 
 @pytest.fixture()
-def client(_seeded_dir: Path) -> Iterator[TestClient]:
+def client(seeded_dir: Path) -> Iterator[TestClient]:
     # Fresh cache between tests.
     from asciip_api.cache import get_cache
 

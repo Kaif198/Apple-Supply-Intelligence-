@@ -15,10 +15,8 @@ from pathlib import Path
 from typing import Any
 
 import joblib
-
-from asciip_shared import get_logger, get_settings
-
 from asciip_data_pipeline.features import get_feature_store
+from asciip_shared import get_logger, get_settings
 
 
 @dataclass(frozen=True)
@@ -84,14 +82,12 @@ class ModelRegistry:
         )
         for name, payload in reg.extra_artifacts.items():
             path = artifact_dir / name
-            if isinstance(payload, (bytes, bytearray)):
+            if isinstance(payload, bytes | bytearray):
                 path.write_bytes(bytes(payload))
             elif isinstance(payload, str):
                 path.write_text(payload, encoding="utf-8")
             else:
-                path.write_text(
-                    json.dumps(payload, indent=2, default=str), encoding="utf-8"
-                )
+                path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
 
         with self._store.connect() as con:
             if reg.promote_to_production:
@@ -216,7 +212,9 @@ def _row_to_record(row: tuple) -> ModelRecord:
         id=rec_id,
         family=family,
         version=version,
-        created_at=created_at if isinstance(created_at, datetime) else datetime.fromisoformat(str(created_at)),
+        created_at=created_at
+        if isinstance(created_at, datetime)
+        else datetime.fromisoformat(str(created_at)),
         metrics=json.loads(metrics_json) if metrics_json else {},
         hyperparameters=json.loads(hyperparameters_json) if hyperparameters_json else {},
         artifact_path=Path(artifact_path),

@@ -10,7 +10,6 @@ from __future__ import annotations
 from datetime import date, timedelta
 
 import polars as pl
-
 from asciip_shared import COMMODITY_CODES
 
 from asciip_data_pipeline.sources.base import Source, register_source
@@ -31,7 +30,9 @@ class FredCommodityPrices(Source):
     def _fetch(self) -> pl.DataFrame:
         from fredapi import Fred  # local import — optional heavy dep
 
-        api_key = self.settings.fred_api_key.get_secret_value() if self.settings.fred_api_key else None
+        api_key = (
+            self.settings.fred_api_key.get_secret_value() if self.settings.fred_api_key else None
+        )
         client = Fred(api_key=api_key)
         end = date.today()
         start = end - timedelta(days=self.history_years * 365 + 60)

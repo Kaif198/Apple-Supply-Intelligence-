@@ -27,15 +27,13 @@ from datetime import UTC, datetime
 import numpy as np
 import pandas as pd
 import xgboost as xgb
+from asciip_data_pipeline.features import get_feature_store
+from asciip_shared import get_logger
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.metrics import average_precision_score, brier_score_loss, roc_auc_score
 from sklearn.model_selection import StratifiedKFold
 
-from asciip_shared import get_logger
-
-from asciip_data_pipeline.features import get_feature_store
 from asciip_ml_models.registry import ModelRegistration, get_registry
-
 
 FEATURE_COLUMNS: tuple[str, ...] = (
     "annual_spend_billions",
@@ -84,9 +82,7 @@ class DistressTrainingResult:
 def _load_supplier_frame() -> pd.DataFrame:
     store = get_feature_store()
     with store.connect() as con:
-        df = con.execute(
-            "SELECT * FROM src_apple_supplier_pdf"
-        ).fetch_df()
+        df = con.execute("SELECT * FROM src_apple_supplier_pdf").fetch_df()
     if df.empty:
         raise ValueError("supplier frame is empty — did you run the orchestrator?")
     return df
@@ -131,16 +127,15 @@ def train_distress_classifier(
 
     numeric = list(FEATURE_COLUMNS)
     feature_names = tuple(
-        numeric + [
-            f"{col}__{level}"
-            for col, levels in categorical_levels.items()
-            for level in levels
-        ]
+        numeric
+        + [f"{col}__{level}" for col, levels in categorical_levels.items() for level in levels]
     )
     X = ohe.reindex(columns=feature_names, fill_value=0.0).to_numpy(dtype=np.float64)
 
     # Stratified 5-fold CV for both evaluation and isotonic calibration.
-    cv = StratifiedKFold(n_splits=min(5, max(2, y.sum(), len(y) - y.sum())), shuffle=True, random_state=20250101)
+    cv = StratifiedKFold(
+        n_splits=min(5, max(2, y.sum(), len(y) - y.sum())), shuffle=True, random_state=20250101
+    )
 
     base = xgb.XGBClassifier(
         n_estimators=300,

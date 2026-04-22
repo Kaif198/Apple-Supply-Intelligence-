@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import pytest
-
 from asciip_data_pipeline.supplier_extract.normalize import normalize_supplier_name
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.req_24]
 

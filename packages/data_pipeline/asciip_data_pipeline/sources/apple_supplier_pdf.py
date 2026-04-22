@@ -47,8 +47,7 @@ _NAME_ALIASES: dict[str, str] = {
 }
 
 _LINE_RE = re.compile(
-    r"^(?P<name>[A-Z][\w\s,.&()/'\-]+?)\s{2,}"
-    r"(?P<country>[A-Z]{2})\s+(?P<address>.+)$"
+    r"^(?P<name>[A-Z][\w\s,.&()/'\-]+?)\s{2,}" r"(?P<country>[A-Z]{2})\s+(?P<address>.+)$"
 )
 
 
@@ -92,7 +91,11 @@ class AppleSupplierPDF(Source):
         for link in tree.css("a[href$='.pdf']"):
             href = (link.attributes.get("href") or "").strip()
             if "supplier-list" in href.lower() or "supplier_list" in href.lower():
-                return httpx.URL(href, scheme="https", host="www.apple.com").human_repr() if href.startswith("/") else href
+                return (
+                    httpx.URL(href, scheme="https", host="www.apple.com").human_repr()
+                    if href.startswith("/")
+                    else href
+                )
         raise ConnectionError("Apple SR page has no supplier-list PDF link")
 
     def _parse_pdf(self, pdf_bytes: bytes):  # type: ignore[no-untyped-def]

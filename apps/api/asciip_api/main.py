@@ -12,22 +12,20 @@ Pipeline assembled here:
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
-from typing import AsyncIterator
 
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import ORJSONResponse, Response
-
+from asciip_data_pipeline.features import get_feature_store
 from asciip_shared import (
     CORRELATION_ID_HEADER,
     configure_logging,
     get_logger,
     get_settings,
 )
-
-from asciip_data_pipeline.features import get_feature_store
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import ORJSONResponse, Response
 
 from asciip_api.errors import install_error_handlers
 from asciip_api.middleware import (
@@ -36,7 +34,6 @@ from asciip_api.middleware import (
     install_rate_limit_middleware,
 )
 from asciip_api.routers import ALL_ROUTERS
-
 
 _STARTED_AT = datetime.now(UTC)
 
@@ -53,9 +50,7 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception as exc:  # pragma: no cover — surfaced via /api/health
         log.error("api.feature_store_migration_failed", error=str(exc))
 
-    if settings.env == "production" and any(
-        "localhost" in o for o in settings.cors_origin_list
-    ):
+    if settings.env == "production" and any("localhost" in o for o in settings.cors_origin_list):
         log.warning(
             "api.cors_localhost_in_production",
             hint="Set ASCIIP_CORS_ORIGINS to your production frontend URL",

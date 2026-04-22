@@ -32,7 +32,11 @@ class MarketauxNews(Source):
         return bool(self.settings.marketaux_api_key)
 
     def _fetch(self) -> pl.DataFrame:
-        key = self.settings.marketaux_api_key.get_secret_value() if self.settings.marketaux_api_key else ""
+        key = (
+            self.settings.marketaux_api_key.get_secret_value()
+            if self.settings.marketaux_api_key
+            else ""
+        )
         params = {
             "api_token": key,
             "symbols": "AAPL",

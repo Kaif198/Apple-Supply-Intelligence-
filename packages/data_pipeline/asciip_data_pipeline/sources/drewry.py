@@ -16,7 +16,6 @@ from selectolax.parser import HTMLParser
 
 from asciip_data_pipeline.sources.base import Source, register_source
 
-
 _NUMBER_RE = re.compile(r"\$?(\d[\d,]*)")
 
 

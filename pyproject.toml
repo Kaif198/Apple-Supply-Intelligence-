@@ -65,7 +65,14 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S", "N802", "N806"]
+"tests/**" = ["S", "N802", "N806", "PT011"]
+"**/tests/**" = ["S", "N802", "N806", "PT011"]
+# ML code uses uppercase single-letter names (X, W, T, Y) per mathematical convention.
+"packages/ml_models/**" = ["N803", "N806", "S110", "S112", "S608"]
+# Data pipeline uses controlled internal SQL (no user input) and a trusted git subprocess.
+"packages/data_pipeline/**" = ["S603", "S607", "S608"]
+# API layer uses internal parameterised SQL and intentional try/except suppression.
+"apps/api/**" = ["S608", "S110", "SIM105", "N806"]
 
 [tool.ruff.format]
 quote-style = "double"

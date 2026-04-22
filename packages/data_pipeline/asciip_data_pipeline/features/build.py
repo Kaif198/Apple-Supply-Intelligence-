@@ -21,7 +21,6 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 
 import duckdb
-
 from asciip_shared import configure_logging, get_logger, get_settings
 
 from asciip_data_pipeline.features.store import get_feature_store
@@ -82,9 +81,13 @@ def _git_sha() -> str:
     if os.environ.get("ASCIIP_BUILD_SHA"):
         return os.environ["ASCIIP_BUILD_SHA"]
     try:
-        return subprocess.check_output(
-            ["git", "rev-parse", "--short", "HEAD"], stderr=subprocess.DEVNULL
-        ).decode().strip()
+        return (
+            subprocess.check_output(
+                ["git", "rev-parse", "--short", "HEAD"], stderr=subprocess.DEVNULL
+            )
+            .decode()
+            .strip()
+        )
     except Exception:  # pragma: no cover — no git available
         return "unknown"
 
@@ -93,9 +96,11 @@ def _materialize_plan(con: duckdb.DuckDBPyConnection, plan: WidePlan, git_sha: s
     inserted = 0
     for col in plan.value_cols:
         feature_name = f"{plan.feature_prefix}{col}"
+        cols = (
+            "(entity_id, entity_kind, as_of_ts, feature_name, feature_value, feature_text, git_sha)"
+        )
         sql = (
-            "INSERT OR REPLACE INTO features_wide "
-            "(entity_id, entity_kind, as_of_ts, feature_name, feature_value, feature_text, git_sha) "
+            f"INSERT OR REPLACE INTO features_wide {cols} "
             f"SELECT {plan.entity_id_col}, '{plan.entity_kind}', as_of_ts, ?, "
             f"CAST({col} AS DOUBLE), NULL, ? "
             f"FROM {plan.source_view} "

@@ -10,12 +10,9 @@ import asyncio
 from pathlib import Path
 
 import pytest
-
-from asciip_shared.config import reset_settings_cache
-
 from asciip_data_pipeline import orchestrator, synthetic
 from asciip_data_pipeline.audit import latest_audit_rows
-
+from asciip_shared.config import reset_settings_cache
 
 pytestmark = [pytest.mark.integration, pytest.mark.req_2, pytest.mark.req_20]
 

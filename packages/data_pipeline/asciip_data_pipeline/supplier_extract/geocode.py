@@ -11,13 +11,12 @@ and the public service is not hammered.
 from __future__ import annotations
 
 import time
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
 
 import httpx
 import polars as pl
-
 from asciip_shared import get_logger, get_settings
 
 

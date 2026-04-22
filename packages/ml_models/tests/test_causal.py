@@ -5,10 +5,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
-
 from asciip_ml_models.causal import CausalConfig, estimate_ate
 from asciip_ml_models.causal.engine import _double_ml_ate
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.req_11]
 
@@ -26,9 +24,7 @@ def _make_synthetic(n: int = 800, true_effect: float = 1.5, seed: int = 42) -> p
 
 def test_dml_recovers_true_ate_within_10pct() -> None:
     data = _make_synthetic(true_effect=1.5)
-    cfg = CausalConfig(
-        treatment="T", outcome="Y", confounders=("W1", "W2"), data=data
-    )
+    cfg = CausalConfig(treatment="T", outcome="Y", confounders=("W1", "W2"), data=data)
     est = _double_ml_ate(cfg)
     assert est.method == "double_ml"
     assert abs(est.ate - 1.5) / 1.5 < 0.10

@@ -5,14 +5,12 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
-
 from asciip_shared.provenance import (
     ProvenanceBundle,
     ProvenanceEntry,
     ProvenanceKind,
     SourceMetadata,
 )
-
 
 pytestmark = pytest.mark.unit
 

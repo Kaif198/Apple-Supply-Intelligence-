@@ -37,4 +37,4 @@ def _freeze_env() -> Iterator[None]:
     """Pin test runs to the test environment so fail-fast is strict."""
     os.environ.setdefault("ASCIIP_ENV", "test")
     os.environ.setdefault("ASCIIP_LOG_PRETTY", "false")
-    yield
+    return

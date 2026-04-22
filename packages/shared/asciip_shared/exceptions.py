@@ -33,7 +33,7 @@ class ASCIIPError(Exception):
         self.detail: dict[str, Any] = detail or {}
         self.correlation_id = correlation_id
 
-    def to_problem(self, instance: str | None = None) -> "ProblemDetail":
+    def to_problem(self, instance: str | None = None) -> ProblemDetail:
         return ProblemDetail(
             type=f"about:blank/asciip/{self.slug}",
             title=self.title,

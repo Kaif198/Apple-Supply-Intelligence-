@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-
 pytestmark = [pytest.mark.integration, pytest.mark.req_15, pytest.mark.req_16]
 
 
@@ -154,8 +153,18 @@ def test_monte_carlo(client):
             "n_trials": 500,
             "horizon_years": 1.0,
             "shocks": [
-                {"name": "aluminum", "mean_return": 0.02, "volatility": 0.18, "elasticity_bps_per_10pct": 8.0},
-                {"name": "copper", "mean_return": 0.02, "volatility": 0.22, "elasticity_bps_per_10pct": 9.0},
+                {
+                    "name": "aluminum",
+                    "mean_return": 0.02,
+                    "volatility": 0.18,
+                    "elasticity_bps_per_10pct": 8.0,
+                },
+                {
+                    "name": "copper",
+                    "mean_return": 0.02,
+                    "volatility": 0.22,
+                    "elasticity_bps_per_10pct": 9.0,
+                },
             ],
             "supplier_stress_mean": 0.1,
             "supplier_stress_sd": 0.02,

@@ -7,10 +7,8 @@ margin vs revenue growth) can be plotted with no code change.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
-from typing import Callable, Sequence
-
-import numpy as np
 
 from asciip_ml_models.valuation.base_case import DCFAssumptions, run_dcf
 
@@ -22,7 +20,7 @@ class Sensitivity2D:
     col_field: str
     row_values: tuple[float, ...]
     col_values: tuple[float, ...]
-    implied_prices: tuple[tuple[float, ...], ...]  # rows × cols
+    implied_prices: tuple[tuple[float, ...], ...]  # rows x cols
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -78,7 +76,11 @@ def two_way_sensitivity(
 
 
 def sensitivity_delta(
-    base: DCFAssumptions, *, field: str, delta: float, fn: Callable[[DCFAssumptions], float] | None = None
+    base: DCFAssumptions,
+    *,
+    field: str,
+    delta: float,
+    fn: Callable[[DCFAssumptions], float] | None = None,
 ) -> float:
     """Return ``Δ implied_price`` for a one-variable perturbation."""
     flex_up = replace(base, **{field: getattr(base, field) + delta})

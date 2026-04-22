@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import pytest
-
 # Importing the orchestrator triggers the registration side-effects.
 import asciip_data_pipeline.orchestrator  # noqa: F401
+import pytest
 from asciip_data_pipeline.sources import default_registry
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.req_2]
 

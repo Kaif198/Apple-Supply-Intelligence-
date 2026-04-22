@@ -17,17 +17,17 @@ from asciip_data_pipeline.sources.base import Source, register_source
 # supplier-PDF extractor at runtime.
 _SUPPLIER_TICKERS = (
     "AAPL",
-    "TSM",      # TSMC
+    "TSM",  # TSMC
     "005930.KS",  # Samsung
     "035420.KS",  # Naver — placeholder for Korean breadth
     "2354.TW",  # Foxconn / Hon Hai
     "4938.TW",  # Pegatron
     "002475.SZ",  # Luxshare
     "066570.KS",  # LG
-    "AVGO",     # Broadcom
-    "QCOM",     # Qualcomm
-    "SWKS",     # Skyworks
-    "MU",       # Micron
+    "AVGO",  # Broadcom
+    "QCOM",  # Qualcomm
+    "SWKS",  # Skyworks
+    "MU",  # Micron
 )
 
 
@@ -43,7 +43,11 @@ class FinnhubFundamentals(Source):
         return bool(self.settings.finnhub_api_key)
 
     def _fetch(self) -> pl.DataFrame:
-        key = self.settings.finnhub_api_key.get_secret_value() if self.settings.finnhub_api_key else ""
+        key = (
+            self.settings.finnhub_api_key.get_secret_value()
+            if self.settings.finnhub_api_key
+            else ""
+        )
         rows: list[dict[str, object]] = []
         with httpx.Client(timeout=15.0) as client:
             for ticker in _SUPPLIER_TICKERS:
@@ -66,7 +70,9 @@ class FinnhubFundamentals(Source):
                     {
                         "ticker": ticker,
                         "market_cap_musd": float(metric.get("marketCapitalization") or 0.0),
-                        "debt_to_equity_ttm": float(metric.get("totalDebt/totalEquityAnnual") or 0.0),
+                        "debt_to_equity_ttm": float(
+                            metric.get("totalDebt/totalEquityAnnual") or 0.0
+                        ),
                         "current_ratio_ttm": float(metric.get("currentRatioAnnual") or 0.0),
                         "revenue_growth_ttm": float(metric.get("revenueGrowthTTMYoy") or 0.0),
                         "operating_margin_ttm": float(metric.get("operatingMarginTTM") or 0.0),

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-
 from asciip_shared.exceptions import (
     ASCIIPError,
     ConfigurationError,
@@ -14,7 +13,6 @@ from asciip_shared.exceptions import (
     ProblemDetail,
     ValidationError,
 )
-
 
 pytestmark = pytest.mark.unit
 

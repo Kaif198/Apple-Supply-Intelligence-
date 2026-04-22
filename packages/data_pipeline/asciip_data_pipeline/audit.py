@@ -11,7 +11,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import duckdb
-
 from asciip_shared import SourceMetadata, get_logger, get_settings
 
 _CREATE_AUDIT = """

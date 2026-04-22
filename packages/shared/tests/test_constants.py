@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-
 from asciip_shared.constants import (
     COMMODITY_CODES,
     COMMODITY_ORDER,
@@ -13,7 +12,6 @@ from asciip_shared.constants import (
     classify_by_probability,
     classify_by_usd,
 )
-
 
 pytestmark = pytest.mark.unit
 

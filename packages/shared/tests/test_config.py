@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 import pytest
-
 from asciip_shared.config import Settings, get_settings, reset_settings_cache
 from asciip_shared.exceptions import ConfigurationError
-
 
 pytestmark = pytest.mark.unit
 

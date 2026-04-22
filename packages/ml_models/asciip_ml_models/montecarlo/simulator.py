@@ -22,15 +22,14 @@ JS port) can mirror it without compile-time surprises.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Mapping, Sequence
 
 import numpy as np
 
 from asciip_ml_models.valuation.base_case import (
     DCFAssumptions,
     apple_base_case,
-    run_dcf,
 )
 
 
@@ -44,9 +43,9 @@ class ShockSpec:
     """
 
     name: str
-    mean_return: float              # annualised expected log return
-    volatility: float               # annualised standard deviation (log returns)
-    elasticity_bps_per_10pct: float # margin sensitivity per 10% commodity move
+    mean_return: float  # annualised expected log return
+    volatility: float  # annualised standard deviation (log returns)
+    elasticity_bps_per_10pct: float  # margin sensitivity per 10% commodity move
 
 
 @dataclass(frozen=True)
@@ -55,7 +54,7 @@ class MonteCarloConfig:
     horizon_years: float = 1.0
     shocks: tuple[ShockSpec, ...] = ()
     correlation: tuple[tuple[float, ...], ...] | None = None  # optional
-    supplier_stress_mean: float = 0.15      # baseline P(supplier outage)
+    supplier_stress_mean: float = 0.15  # baseline P(supplier outage)
     supplier_stress_sd: float = 0.05
     outage_revenue_haircut_mean: float = 0.03
     outage_revenue_haircut_sd: float = 0.01
@@ -66,20 +65,17 @@ class MonteCarloConfig:
 @dataclass(frozen=True)
 class MonteCarloResult:
     config: MonteCarloConfig
-    implied_price_samples: np.ndarray           # shape (n_trials,)
-    margin_delta_bps_samples: np.ndarray        # shape (n_trials,)
-    revenue_delta_pct_samples: np.ndarray       # shape (n_trials,)
-    commodity_return_samples: np.ndarray        # shape (n_trials, k)
+    implied_price_samples: np.ndarray  # shape (n_trials,)
+    margin_delta_bps_samples: np.ndarray  # shape (n_trials,)
+    revenue_delta_pct_samples: np.ndarray  # shape (n_trials,)
+    commodity_return_samples: np.ndarray  # shape (n_trials, k)
 
     @property
     def n_trials(self) -> int:
         return int(self.implied_price_samples.shape[0])
 
     def percentiles(self, qs: Sequence[float] = (5, 25, 50, 75, 95)) -> dict[float, float]:
-        return {
-            float(q): float(np.nanpercentile(self.implied_price_samples, q))
-            for q in qs
-        }
+        return {float(q): float(np.nanpercentile(self.implied_price_samples, q)) for q in qs}
 
     def var_cvar(self, q: float = 5.0) -> tuple[float, float]:
         price = self.implied_price_samples
@@ -113,15 +109,13 @@ def _build_correlation(n: int, user_corr: tuple[tuple[float, ...], ...] | None) 
         return default
     arr = np.asarray(user_corr, dtype=np.float64)
     if arr.shape != (n, n):
-        raise ValueError(f"correlation must be {n}×{n}, got {arr.shape}")
+        raise ValueError(f"correlation must be {n}x{n}, got {arr.shape}")
     if not np.allclose(arr, arr.T, atol=1e-9):
         raise ValueError("correlation must be symmetric")
     return arr
 
 
-def _draw_correlated_returns(
-    cfg: MonteCarloConfig, rng: np.random.Generator
-) -> np.ndarray:
+def _draw_correlated_returns(cfg: MonteCarloConfig, rng: np.random.Generator) -> np.ndarray:
     if not cfg.shocks:
         return np.zeros((cfg.n_trials, 0), dtype=np.float64)
     k = len(cfg.shocks)
@@ -130,7 +124,7 @@ def _draw_correlated_returns(
     corr = _build_correlation(k, cfg.correlation)
 
     # Build covariance on a horizon-scaled basis.
-    scale = np.sqrt(cfg.horizon_years)
+    np.sqrt(cfg.horizon_years)
     cov = corr * np.outer(vols, vols) * (cfg.horizon_years)
 
     # Cholesky factor + standard-normal draw; robust to mildly singular matrices
@@ -147,9 +141,7 @@ def _draw_correlated_returns(
     return np.expm1(log_returns)
 
 
-def _margin_delta_bps(
-    simple_returns: np.ndarray, elasticities_per_10pct: np.ndarray
-) -> np.ndarray:
+def _margin_delta_bps(simple_returns: np.ndarray, elasticities_per_10pct: np.ndarray) -> np.ndarray:
     """Sum per-commodity elasticity contributions.
 
     Elasticities are stated per 10% move, so divide by 0.10.
@@ -159,9 +151,7 @@ def _margin_delta_bps(
     return -simple_returns @ (elasticities_per_10pct / 0.10)
 
 
-def _revenue_delta_pct(
-    cfg: MonteCarloConfig, rng: np.random.Generator
-) -> np.ndarray:
+def _revenue_delta_pct(cfg: MonteCarloConfig, rng: np.random.Generator) -> np.ndarray:
     # Supplier-stress composite as a clipped normal draw on [0, 1].
     stress = rng.normal(
         loc=cfg.supplier_stress_mean,
@@ -207,11 +197,7 @@ def _price_from_perturbations(
     discount = np.power(1.0 + a.wacc, years)
     pv_explicit = np.sum(fcf / discount, axis=1)
 
-    terminal = (
-        fcf[:, -1]
-        * (1.0 + a.terminal_growth)
-        / (a.wacc - a.terminal_growth)
-    )
+    terminal = fcf[:, -1] * (1.0 + a.terminal_growth) / (a.wacc - a.terminal_growth)
     pv_terminal = terminal / discount[-1]
 
     enterprise = pv_explicit + pv_terminal
@@ -227,9 +213,7 @@ def run_simulation(config: MonteCarloConfig) -> MonteCarloResult:
     rng = np.random.default_rng(config.seed)
 
     returns = _draw_correlated_returns(config, rng)
-    elasticities = np.array(
-        [s.elasticity_bps_per_10pct for s in config.shocks], dtype=np.float64
-    )
+    elasticities = np.array([s.elasticity_bps_per_10pct for s in config.shocks], dtype=np.float64)
     margin_delta = _margin_delta_bps(returns, elasticities)
     revenue_delta = _revenue_delta_pct(config, rng)
     prices = _price_from_perturbations(config, margin_delta, revenue_delta)
@@ -256,8 +240,8 @@ def default_shocks() -> tuple[ShockSpec, ...]:
     """
     return (
         ShockSpec("aluminum", mean_return=0.02, volatility=0.18, elasticity_bps_per_10pct=8.0),
-        ShockSpec("copper",   mean_return=0.02, volatility=0.22, elasticity_bps_per_10pct=9.0),
-        ShockSpec("lithium",  mean_return=0.00, volatility=0.45, elasticity_bps_per_10pct=4.0),
-        ShockSpec("cobalt",   mean_return=-0.01, volatility=0.35, elasticity_bps_per_10pct=3.0),
-        ShockSpec("brent",    mean_return=0.01, volatility=0.28, elasticity_bps_per_10pct=5.0),
+        ShockSpec("copper", mean_return=0.02, volatility=0.22, elasticity_bps_per_10pct=9.0),
+        ShockSpec("lithium", mean_return=0.00, volatility=0.45, elasticity_bps_per_10pct=4.0),
+        ShockSpec("cobalt", mean_return=-0.01, volatility=0.35, elasticity_bps_per_10pct=3.0),
+        ShockSpec("brent", mean_return=0.01, volatility=0.28, elasticity_bps_per_10pct=5.0),
     )

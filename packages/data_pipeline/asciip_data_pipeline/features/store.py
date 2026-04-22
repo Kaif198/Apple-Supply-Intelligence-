@@ -20,7 +20,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import duckdb
-
 from asciip_shared import FeatureStoreError, get_logger, get_settings
 
 _MIGRATIONS_DIR = Path(__file__).parent / "migrations"
@@ -47,9 +46,7 @@ def _discover_migrations() -> list[Migration]:
         match = _MIGRATION_FILE_RE.match(path.name)
         if not match:
             continue
-        migrations.append(
-            Migration(version=int(match.group(1)), name=match.group(2), path=path)
-        )
+        migrations.append(Migration(version=int(match.group(1)), name=match.group(2), path=path))
     return migrations
 
 
@@ -99,8 +96,7 @@ class FeatureStore:
                 " version INTEGER PRIMARY KEY, name VARCHAR, applied_at TIMESTAMP)"
             )
             applied = {
-                row[0]
-                for row in con.execute("SELECT version FROM schema_version").fetchall()
+                row[0] for row in con.execute("SELECT version FROM schema_version").fetchall()
             }
             for mig in _discover_migrations():
                 if mig.version in applied:
@@ -171,9 +167,7 @@ class FeatureStore:
             # Unified src_* views: raw when it exists, else snapshot.
             for name in raw_names | snapshot_names:
                 target = f"raw_{name}" if name in raw_names else f"snapshot_{name}"
-                con.execute(
-                    f"CREATE OR REPLACE VIEW src_{name} AS SELECT * FROM {target}"
-                )
+                con.execute(f"CREATE OR REPLACE VIEW src_{name} AS SELECT * FROM {target}")
         finally:
             con.close()
 

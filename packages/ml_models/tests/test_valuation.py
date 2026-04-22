@@ -2,18 +2,15 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import replace
 
-import math
 import pytest
-
 from asciip_ml_models.valuation import (
-    DCFAssumptions,
     apple_base_case,
     run_dcf,
     two_way_sensitivity,
 )
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.req_13]
 
@@ -32,8 +29,7 @@ def test_horizon_shape() -> None:
     assert len(result.projected_fcf_bn) == 5
     # Monotonic growth at positive CAGR.
     assert all(
-        result.projected_revenue_bn[i + 1] > result.projected_revenue_bn[i]
-        for i in range(4)
+        result.projected_revenue_bn[i + 1] > result.projected_revenue_bn[i] for i in range(4)
     )
 
 
@@ -47,9 +43,7 @@ def test_enterprise_plus_cash_equals_equity() -> None:
     a = apple_base_case()
     r = run_dcf(a)
     assert math.isclose(r.equity_value_bn, r.enterprise_value_bn + a.net_cash_bn, rel_tol=1e-9)
-    assert math.isclose(
-        r.implied_price_usd, r.equity_value_bn / a.shares_diluted_bn, rel_tol=1e-9
-    )
+    assert math.isclose(r.implied_price_usd, r.equity_value_bn / a.shares_diluted_bn, rel_tol=1e-9)
 
 
 def test_higher_wacc_decreases_price() -> None:
@@ -80,7 +74,7 @@ def test_sensitivity_nan_when_wacc_below_g() -> None:
     grid = two_way_sensitivity(
         apple_base_case(),
         row_field="wacc",
-        row_values=(0.020,),           # below any reasonable terminal growth
+        row_values=(0.020,),  # below any reasonable terminal growth
         col_field="terminal_growth",
         col_values=(0.025, 0.030),
     )

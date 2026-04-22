@@ -73,11 +73,11 @@ def classify_by_probability(p: float) -> SeverityClass:
 
 # FRED series / proxy codes used by the forecasting engine.
 COMMODITY_CODES: Final[dict[str, str]] = {
-    "copper": "PCOPPUSDM",          # Global price of copper, USD per metric ton
-    "aluminum": "PALUMUSDM",        # Global price of aluminum
+    "copper": "PCOPPUSDM",  # Global price of copper, USD per metric ton
+    "aluminum": "PALUMUSDM",  # Global price of aluminum
     "lithium_carbonate": "PLITHUSDM",  # Proxy; see data_sources.md for full sourcing
-    "rare_earth_ndpr": "PRAREUSDM",    # Neodymium-praseodymium proxy
-    "crude_oil_wti": "DCOILWTICO",     # WTI crude oil
+    "rare_earth_ndpr": "PRAREUSDM",  # Neodymium-praseodymium proxy
+    "crude_oil_wti": "DCOILWTICO",  # WTI crude oil
 }
 
 COMMODITY_ORDER: Final[tuple[str, ...]] = (

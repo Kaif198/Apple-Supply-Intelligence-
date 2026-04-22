@@ -6,13 +6,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-
-from asciip_shared.config import reset_settings_cache
-
 from asciip_data_pipeline import synthetic
 from asciip_data_pipeline.features import get_feature_store, point_in_time_frame, watermark
 from asciip_data_pipeline.features.build import build as build_features
-
+from asciip_shared.config import reset_settings_cache
 
 pytestmark = [pytest.mark.integration, pytest.mark.req_3, pytest.mark.req_17]
 
@@ -26,7 +23,7 @@ def seeded_store(tmp_data_dir: Path):
     from asciip_data_pipeline.features import store as store_mod
 
     store_mod._default_store = None  # type: ignore[attr-defined]
-    yield get_feature_store()
+    return get_feature_store()
 
 
 def test_migrations_create_core_tables(seeded_store) -> None:  # type: ignore[no-untyped-def]
@@ -36,16 +33,24 @@ def test_migrations_create_core_tables(seeded_store) -> None:  # type: ignore[no
             "ORDER BY table_name"
         ).fetchall()
     names = {r[0] for r in rows}
-    assert {"schema_version", "ingestion_audit", "model_registry",
-            "feature_lineage", "features_wide", "disruption_events",
-            "alerts", "suppliers", "scoring_audit"} <= names
+    assert {
+        "schema_version",
+        "ingestion_audit",
+        "model_registry",
+        "feature_lineage",
+        "features_wide",
+        "disruption_events",
+        "alerts",
+        "suppliers",
+        "scoring_audit",
+    } <= names
 
 
 def test_src_views_unify_snapshot_without_raw(seeded_store) -> None:  # type: ignore[no-untyped-def]
     with seeded_store.connect() as con:
-        tables = {r[0] for r in con.execute(
-            "SELECT table_name FROM information_schema.tables"
-        ).fetchall()}
+        tables = {
+            r[0] for r in con.execute("SELECT table_name FROM information_schema.tables").fetchall()
+        }
     # With only snapshots seeded, src_* views must still exist for our five.
     for name in (
         "src_fred_commodity_prices",
@@ -62,16 +67,19 @@ def test_build_populates_features_wide(seeded_store) -> None:  # type: ignore[no
     with seeded_store.connect() as con:
         row = con.execute("SELECT COUNT(*) FROM features_wide").fetchone()
         feature_names = {
-            r[0]
-            for r in con.execute(
-                "SELECT DISTINCT feature_name FROM features_wide"
-            ).fetchall()
+            r[0] for r in con.execute("SELECT DISTINCT feature_name FROM features_wide").fetchall()
         }
-    assert row and row[0] > 100
+    assert row
+    assert row[0] > 100
     # All five planned features landed.
-    assert {"commodity_price", "commodity_vol_30d_annualized",
-            "fx_rate", "aapl_adj_close", "aapl_log_return",
-            "target_gross_margin"} <= feature_names
+    assert {
+        "commodity_price",
+        "commodity_vol_30d_annualized",
+        "fx_rate",
+        "aapl_adj_close",
+        "aapl_log_return",
+        "target_gross_margin",
+    } <= feature_names
 
 
 def test_watermark_monotonic(seeded_store) -> None:  # type: ignore[no-untyped-def]

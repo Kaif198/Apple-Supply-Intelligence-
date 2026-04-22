@@ -12,7 +12,6 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 # --------------------------------------------------------------------- base model
 
 
@@ -247,9 +246,7 @@ class SensitivityResponse(_Model):
 class CausalRequest(_Model):
     treatment: Literal["aluminum", "copper", "lithium", "cobalt", "brent"]
     outcome: Literal["aapl_log_return"] = "aapl_log_return"
-    confounders: list[str] = Field(
-        default_factory=lambda: ["market_lag1", "fx_change_lag1"]
-    )
+    confounders: list[str] = Field(default_factory=lambda: ["market_lag1", "fx_change_lag1"])
     lookback_days: int = Field(500, ge=60, le=3650)
 
 
@@ -291,9 +288,7 @@ class AckAlertRequest(_Model):
 
 class ExportRequest(_Model):
     format: Literal["json", "csv", "xlsx", "pdf"]
-    dataset: Literal[
-        "commodities", "suppliers", "events", "alerts", "scenarios", "dcf"
-    ]
+    dataset: Literal["commodities", "suppliers", "events", "alerts", "scenarios", "dcf"]
     params: dict[str, Any] = Field(default_factory=dict)
 
 

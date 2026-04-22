@@ -10,7 +10,6 @@ import sys
 from typing import Any
 
 import httpx
-
 from asciip_shared import configure_logging, get_logger, get_settings
 
 
@@ -48,7 +47,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         payload = _fetch(args.url, timeout=args.timeout)
-    except Exception as exc:  # noqa: BLE001 — smoke intentionally catches everything
+    except Exception as exc:  # — smoke intentionally catches everything
         log.error("smoke.failed", url=args.url, error=str(exc))
         return 1
 

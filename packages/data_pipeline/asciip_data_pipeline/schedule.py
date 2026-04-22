@@ -16,7 +16,6 @@ from typing import Final
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
-
 from asciip_shared import get_logger, get_settings
 
 from asciip_data_pipeline import orchestrator

@@ -19,22 +19,20 @@ the set of assumptions required for it to be valid.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Sequence
 
 import numpy as np
 import pandas as pd
+from asciip_shared import get_logger
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold
 
-from asciip_shared import get_logger
-
 
 @dataclass(frozen=True)
 class CausalConfig:
-    treatment: str                      # name of continuous treatment column in X
-    outcome: str                        # name of outcome column in X
-    confounders: tuple[str, ...]        # backdoor covariates
+    treatment: str  # name of continuous treatment column in X
+    outcome: str  # name of outcome column in X
+    confounders: tuple[str, ...]  # backdoor covariates
     data: pd.DataFrame
     treatment_threshold: float | None = None  # binarise at this value for DoWhy path
     n_splits: int = 5
@@ -55,6 +53,7 @@ class CausalEstimate:
 
 # --------------------------------------------------------------------------- DML
 
+
 def _double_ml_ate(cfg: CausalConfig) -> CausalEstimate:
     """Partial-out DML for continuous treatment with k-fold cross-fitting."""
     log = get_logger("asciip.causal.dml")
@@ -71,8 +70,12 @@ def _double_ml_ate(cfg: CausalConfig) -> CausalEstimate:
     Y_resid = np.zeros_like(Y)
 
     for train_idx, test_idx in kf.split(W):
-        t_model = GradientBoostingRegressor(n_estimators=120, max_depth=3, random_state=cfg.random_state)
-        y_model = GradientBoostingRegressor(n_estimators=120, max_depth=3, random_state=cfg.random_state)
+        t_model = GradientBoostingRegressor(
+            n_estimators=120, max_depth=3, random_state=cfg.random_state
+        )
+        y_model = GradientBoostingRegressor(
+            n_estimators=120, max_depth=3, random_state=cfg.random_state
+        )
         t_model.fit(W[train_idx], T[train_idx])
         y_model.fit(W[train_idx], Y[train_idx])
         T_resid[test_idx] = T[test_idx] - t_model.predict(W[test_idx])

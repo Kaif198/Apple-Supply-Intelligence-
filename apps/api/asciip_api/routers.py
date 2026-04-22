@@ -12,10 +12,9 @@ import json
 from datetime import UTC, datetime
 from typing import Any
 
+from asciip_shared import get_settings
 from fastapi import APIRouter, HTTPException, Path, Query, Request, Response, status
 from sse_starlette.sse import EventSourceResponse
-
-from asciip_shared import get_settings
 
 from asciip_api import services
 from asciip_api.cache import current_watermark, get_cache, make_cache_key
@@ -43,7 +42,6 @@ from asciip_api.schemas import (
     SuppliersResponse,
     VersionResponse,
 )
-
 
 _STARTED_AT = datetime.now(UTC)
 
@@ -97,9 +95,7 @@ async def health() -> HealthResponse:
             HealthComponent(name="feature_store", status="ok", detail=f"watermark={wm.isoformat()}")
         )
     except Exception as exc:  # pragma: no cover — surfaces degraded state
-        components.append(
-            HealthComponent(name="feature_store", status="degraded", detail=str(exc))
-        )
+        components.append(HealthComponent(name="feature_store", status="degraded", detail=str(exc)))
 
     overall = "ok" if all(c.status == "ok" for c in components) else "degraded"
     return HealthResponse(
@@ -135,7 +131,10 @@ async def get_prices(
 ) -> Any:
     key = make_cache_key("/api/commodities/prices", {"lookback_days": lookback_days})
     return _cached_json(
-        request, response, key=key, ttl_seconds=60,
+        request,
+        response,
+        key=key,
+        ttl_seconds=60,
         producer=lambda: services.get_commodity_panel(lookback_days=lookback_days),
     )
 
@@ -144,7 +143,9 @@ async def get_prices(
 async def get_forecast(
     request: Request,
     response: Response,
-    entity_id: str = Query(..., pattern=r"^(aluminum|copper|lithium_carbonate|rare_earth_ndpr|crude_oil_wti)$"),
+    entity_id: str = Query(
+        ..., pattern=r"^(aluminum|copper|lithium_carbonate|rare_earth_ndpr|crude_oil_wti)$"
+    ),
     horizon_days: int = Query(30, ge=7, le=180),
 ) -> Any:
     key = make_cache_key(
@@ -152,7 +153,10 @@ async def get_forecast(
         {"entity_id": entity_id, "horizon_days": horizon_days},
     )
     return _cached_json(
-        request, response, key=key, ttl_seconds=1800,
+        request,
+        response,
+        key=key,
+        ttl_seconds=1800,
         producer=lambda: services.commodity_forecast(entity_id, horizon_days=horizon_days),
     )
 
@@ -171,7 +175,10 @@ async def get_aapl_history(
 ) -> Any:
     key = make_cache_key("/api/equity/aapl", {"lookback_days": lookback_days})
     return _cached_json(
-        request, response, key=key, ttl_seconds=60,
+        request,
+        response,
+        key=key,
+        ttl_seconds=60,
         producer=lambda: services.aapl_history(lookback_days=lookback_days),
     )
 
@@ -181,7 +188,10 @@ async def get_factors(request: Request, response: Response) -> Any:
     key = make_cache_key("/api/equity/factors")
     try:
         return _cached_json(
-            request, response, key=key, ttl_seconds=900,
+            request,
+            response,
+            key=key,
+            ttl_seconds=900,
             producer=services.factor_report,
         )
     except RuntimeError as exc:
@@ -199,21 +209,20 @@ suppliers_router = APIRouter(prefix="/api/suppliers", tags=["suppliers"])
 @suppliers_router.get("", response_model=SuppliersResponse)
 async def get_suppliers(request: Request, response: Response) -> Any:
     return _cached_json(
-        request, response, key="/api/suppliers", ttl_seconds=300,
+        request,
+        response,
+        key="/api/suppliers",
+        ttl_seconds=300,
         producer=services.list_suppliers,
     )
 
 
 @suppliers_router.get("/{supplier_id}/distress", response_model=SupplierDistressResponse)
-async def supplier_distress(
-    supplier_id: str = Path(..., min_length=1, max_length=64)
-) -> Any:
+async def supplier_distress(supplier_id: str = Path(..., min_length=1, max_length=64)) -> Any:
     try:
         return services.supplier_distress(supplier_id)
     except KeyError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)
-        ) from exc
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
 
 # ====================================================================== events
@@ -231,7 +240,10 @@ async def list_events(
 ) -> Any:
     key = make_cache_key("/api/events", {"severity": severity, "limit": limit})
     return _cached_json(
-        request, response, key=key, ttl_seconds=30,
+        request,
+        response,
+        key=key,
+        ttl_seconds=30,
         producer=lambda: services.list_events(severity=severity, limit=limit),
     )
 

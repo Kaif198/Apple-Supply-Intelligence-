@@ -8,13 +8,8 @@ This is the Requirement 3.5 guarantee enforced in CI.
 from __future__ import annotations
 
 from datetime import UTC, date, datetime, timedelta
-from pathlib import Path
 
 import pytest
-from hypothesis import HealthCheck, given, settings, strategies as st
-
-from asciip_shared.config import reset_settings_cache
-
 from asciip_data_pipeline import synthetic
 from asciip_data_pipeline.features import (
     assert_no_leak,
@@ -22,7 +17,9 @@ from asciip_data_pipeline.features import (
     point_in_time_frame,
 )
 from asciip_data_pipeline.features.build import build as build_features
-
+from asciip_shared.config import reset_settings_cache
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
 
 pytestmark = [pytest.mark.property, pytest.mark.req_3]
 
@@ -49,7 +46,7 @@ def built_store(tmp_path_factory: pytest.TempPathFactory):  # type: ignore[no-un
 
     synthetic.write_snapshots(tmp / "snapshots")
     build_features()
-    yield get_feature_store()
+    return get_feature_store()
 
 
 _EARLIEST = date(2022, 1, 1)
@@ -57,13 +54,15 @@ _LATEST = date(2026, 1, 1)
 
 
 @given(days=st.integers(min_value=0, max_value=(_LATEST - _EARLIEST).days))
-@settings(max_examples=500, deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture])
+@settings(
+    max_examples=500, deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture]
+)
 def test_no_future_leak_at_random_cutoffs(built_store, days: int) -> None:  # type: ignore[no-untyped-def]
     cutoff = datetime.combine(_EARLIEST + timedelta(days=days), datetime.min.time(), tzinfo=UTC)
     rows = point_in_time_frame(as_of=cutoff)
-    assert all(r["as_of_ts"] <= cutoff for r in rows), (
-        f"point_in_time_frame leaked rows after {cutoff}"
-    )
+    assert all(
+        r["as_of_ts"] <= cutoff for r in rows
+    ), f"point_in_time_frame leaked rows after {cutoff}"
 
 
 def test_assert_no_leak_helper(built_store) -> None:  # type: ignore[no-untyped-def]
@@ -74,5 +73,6 @@ def test_assert_no_leak_helper(built_store) -> None:  # type: ignore[no-untyped-
             "SELECT COUNT(*) FROM features_wide WHERE as_of_ts <= ?", [cutoff]
         ).fetchone()
         after = assert_no_leak(con, datetime(3000, 1, 1, tzinfo=UTC))
-    assert before and before[0] > 0
+    assert before
+    assert before[0] > 0
     assert after == 0

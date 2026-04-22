@@ -32,13 +32,13 @@ import numpy as np
 class DCFAssumptions:
     """Base-case inputs for an Apple DCF."""
 
-    revenue_ttm_bn: float            # revenue in $ billions at t=0
-    revenue_cagr_5y: float           # annual growth for the explicit forecast window
-    fcf_margin: float                # FCF / revenue, held constant across horizon
-    wacc: float                      # weighted average cost of capital
-    terminal_growth: float           # perpetual growth after year N
-    net_cash_bn: float               # cash + marketable securities - debt
-    shares_diluted_bn: float         # diluted share count in billions
+    revenue_ttm_bn: float  # revenue in $ billions at t=0
+    revenue_cagr_5y: float  # annual growth for the explicit forecast window
+    fcf_margin: float  # FCF / revenue, held constant across horizon
+    wacc: float  # weighted average cost of capital
+    terminal_growth: float  # perpetual growth after year N
+    net_cash_bn: float  # cash + marketable securities - debt
+    shares_diluted_bn: float  # diluted share count in billions
     horizon_years: int = 5
 
     def validate(self) -> None:
@@ -107,13 +107,14 @@ def run_dcf(assumptions: DCFAssumptions) -> DCFResult:
 
     pv_explicit = float(np.sum(fcf / discount))
     terminal_value = float(
-        fcf[-1] * (1.0 + assumptions.terminal_growth)
+        fcf[-1]
+        * (1.0 + assumptions.terminal_growth)
         / (assumptions.wacc - assumptions.terminal_growth)
     )
     pv_terminal = terminal_value / discount[-1]
     enterprise_value = pv_explicit + pv_terminal
     equity_value = enterprise_value + assumptions.net_cash_bn
-    implied_price = (equity_value / assumptions.shares_diluted_bn)
+    implied_price = equity_value / assumptions.shares_diluted_bn
 
     return DCFResult(
         assumptions=assumptions,

@@ -22,20 +22,18 @@ overfit. The design note accompanies the model record.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Iterable, Mapping
 
 import numpy as np
+from asciip_data_pipeline.features import get_feature_store
+from asciip_shared import get_logger
 from sklearn.linear_model import RidgeCV
 from sklearn.metrics import r2_score
 from sklearn.preprocessing import StandardScaler
 
-from asciip_shared import get_logger
-
-from asciip_data_pipeline.features import get_feature_store
 from asciip_ml_models.registry import ModelRegistration, get_registry
-
 
 # Feature set consumed by the Ridge. Order matters — the serialised
 # estimator assumes this exact column contract.
@@ -77,7 +75,7 @@ class MarginModel:
     def elasticities_bps_per_10pct(self) -> dict[str, float]:
         """Translate standardised Ridge coefficients into bps-per-10% moves.
 
-        The standardised coefficient measures Δmargin per +1σ. We convert
+        The standardised coefficient measures delta-margin per +1 std-dev. We convert
         to Δmargin per +10% change by dividing by ``scale * 0.10``, then
         multiply by 10 000 to express in basis points.
         """
@@ -88,7 +86,7 @@ class MarginModel:
             if not np.isfinite(scale) or scale == 0:
                 elasticities[name] = 0.0
                 continue
-            per_pct = coef / scale      # Δmargin per +1 unit
+            per_pct = coef / scale  # Δmargin per +1 unit
             per_10pct = per_pct * 0.10 * _reference_level(name)
             elasticities[name] = float(per_10pct * 10_000.0)
         return elasticities
@@ -149,7 +147,9 @@ def _fetch_wide(feature_names: Iterable[str]) -> dict[tuple[str, datetime], floa
     return out
 
 
-def _as_of_lookup(series: dict[tuple[str, datetime], float], feature_key: str, cutoff: datetime) -> float:
+def _as_of_lookup(
+    series: dict[tuple[str, datetime], float], feature_key: str, cutoff: datetime
+) -> float:
     """Last observation for ``feature_key`` on or before ``cutoff``."""
     best_ts: datetime | None = None
     best_val: float = float("nan")

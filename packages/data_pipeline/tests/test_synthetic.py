@@ -5,13 +5,9 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
-import polars as pl
 import pytest
-
-from asciip_shared import COMMODITY_ORDER
-
 from asciip_data_pipeline import synthetic
-
+from asciip_shared import COMMODITY_ORDER
 
 pytestmark = [pytest.mark.unit, pytest.mark.req_17]
 
@@ -45,10 +41,18 @@ def test_suppliers_snapshot_shape() -> None:
     df = synthetic.generate_suppliers()
     assert df.height >= 30
     for col in (
-        "id", "name", "country", "category", "tier",
-        "annual_spend_billions", "distress_score",
-        "otd_rate_90d", "dpo_days", "revenue_concentration_top3",
-        "lat", "lon",
+        "id",
+        "name",
+        "country",
+        "category",
+        "tier",
+        "annual_spend_billions",
+        "distress_score",
+        "otd_rate_90d",
+        "dpo_days",
+        "revenue_concentration_top3",
+        "lat",
+        "lon",
     ):
         assert col in df.columns
     assert df["distress_score"].min() >= 0.0

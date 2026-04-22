@@ -7,11 +7,9 @@ data-pipeline test harness.
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import pytest
-
 from asciip_shared.config import reset_settings_cache
 
 
@@ -36,7 +34,7 @@ def tmp_data_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
     _reg_mod._default_registry = None  # type: ignore[attr-defined]
 
-    yield tmp_path
+    return tmp_path
 
 
 @pytest.fixture()
@@ -47,4 +45,4 @@ def seeded_feature_store(tmp_data_dir: Path):
 
     synthetic.write_snapshots(tmp_data_dir / "snapshots")
     build_features()
-    yield tmp_data_dir
+    return tmp_data_dir

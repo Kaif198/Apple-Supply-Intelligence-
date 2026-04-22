@@ -25,12 +25,10 @@ from datetime import UTC, datetime
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
-
+from asciip_data_pipeline.features import get_feature_store
 from asciip_shared import get_logger
 
-from asciip_data_pipeline.features import get_feature_store
 from asciip_ml_models.registry import ModelRegistration, get_registry
-
 
 FACTOR_NAMES: tuple[str, ...] = (
     "market",
@@ -163,7 +161,7 @@ def train_factor_regression(
     X = sm.add_constant(X, has_constant="add")
 
     ols = sm.OLS(y, X).fit(cov_type="HAC", cov_kwds={"maxlags": hac_lags})
-    names = ("const",) + FACTOR_NAMES
+    names = ("const", *FACTOR_NAMES)
 
     model = FactorModel(
         params=dict(zip(names, ols.params.tolist(), strict=True)),

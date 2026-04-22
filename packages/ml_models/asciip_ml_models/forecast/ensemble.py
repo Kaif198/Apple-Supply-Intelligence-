@@ -16,16 +16,15 @@ on the last 20% of the training window.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from collections.abc import Sequence
+from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Sequence
 
 import numpy as np
 import pandas as pd
-
+from asciip_data_pipeline.features import get_feature_store
 from asciip_shared import get_logger
 
-from asciip_data_pipeline.features import get_feature_store
 from asciip_ml_models.registry import ModelRegistration, get_registry
 
 try:  # pragma: no cover — optional dependency
@@ -39,11 +38,15 @@ except Exception:  # pragma: no cover
 
 @dataclass(frozen=True)
 class ForecastConfig:
-    commodity: str                          # entity_id in features_wide
+    commodity: str  # entity_id in features_wide
     horizon_days: int = 30
     sibling_commodities: tuple[str, ...] = ()
     arima_orders: tuple[tuple[int, int, int], ...] = (
-        (0, 1, 0), (1, 1, 0), (0, 1, 1), (1, 1, 1), (2, 1, 2),
+        (0, 1, 0),
+        (1, 1, 0),
+        (0, 1, 1),
+        (1, 1, 1),
+        (2, 1, 2),
     )
     lightgbm_lags: tuple[int, ...] = (1, 2, 3, 5, 7, 14, 21)
     val_fraction: float = 0.20
@@ -80,9 +83,7 @@ def _load_history(commodity: str) -> pd.Series:
             [commodity],
         ).fetchall()
     if len(rows) < 60:
-        raise ValueError(
-            f"commodity {commodity!r}: need ≥60 observations, got {len(rows)}"
-        )
+        raise ValueError(f"commodity {commodity!r}: need ≥60 observations, got {len(rows)}")
     idx = pd.DatetimeIndex([r[0] for r in rows]).normalize()
     values = pd.Series([float(r[1]) for r in rows], index=idx, name=commodity)
     # Deduplicate by calendar date (keep last) and forward-fill any gaps.
@@ -269,9 +270,7 @@ def train_commodity_ensemble(config: ForecastConfig) -> ForecastResult:
         raise RuntimeError("no forecaster member succeeded on validation split")
 
     horizon = config.horizon_days
-    fut_index = pd.date_range(
-        series.index[-1] + pd.Timedelta(days=1), periods=horizon, freq="D"
-    )
+    fut_index = pd.date_range(series.index[-1] + pd.Timedelta(days=1), periods=horizon, freq="D")
 
     mean_stack: list[np.ndarray] = []
     lower_stack: list[np.ndarray] = []
@@ -280,15 +279,21 @@ def train_commodity_ensemble(config: ForecastConfig) -> ForecastResult:
 
     if "arima" in weights:
         mean, lo, hi, _ = _fit_arima(series, config.arima_orders, horizon)
-        mean_stack.append(mean); lower_stack.append(lo); upper_stack.append(hi)
+        mean_stack.append(mean)
+        lower_stack.append(lo)
+        upper_stack.append(hi)
         w_ordered.append(weights["arima"])
     if "lightgbm" in weights:
         mean, lo, hi, _ = _fit_lightgbm(series, siblings, config.lightgbm_lags, horizon)
-        mean_stack.append(mean); lower_stack.append(lo); upper_stack.append(hi)
+        mean_stack.append(mean)
+        lower_stack.append(lo)
+        upper_stack.append(hi)
         w_ordered.append(weights["lightgbm"])
     if "prophet" in weights:  # pragma: no cover — optional
         mean, lo, hi = _fit_prophet(series, horizon)
-        mean_stack.append(mean); lower_stack.append(lo); upper_stack.append(hi)
+        mean_stack.append(mean)
+        lower_stack.append(lo)
+        upper_stack.append(hi)
         w_ordered.append(weights["prophet"])
 
     W = np.array(w_ordered, dtype=np.float64)

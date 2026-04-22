@@ -10,11 +10,8 @@ from __future__ import annotations
 
 import time
 from collections import deque
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import Any, Awaitable, Callable
-
-from fastapi import FastAPI, Request, Response, status
-from fastapi.responses import ORJSONResponse
 
 from asciip_shared import (
     CORRELATION_ID_HEADER,
@@ -23,7 +20,8 @@ from asciip_shared import (
     new_correlation_id,
 )
 from asciip_shared.correlation import reset_correlation_id
-
+from fastapi import FastAPI, Request, Response, status
+from fastapi.responses import ORJSONResponse
 
 # --------------------------------------------------------------------- rate-limit
 

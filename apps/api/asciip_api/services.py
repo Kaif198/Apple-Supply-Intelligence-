@@ -17,15 +17,11 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-
-from asciip_shared import get_logger, get_settings
-
 from asciip_data_pipeline.features import get_feature_store
 from asciip_ml_models.causal import CausalConfig, estimate_ate
 from asciip_ml_models.distress.classifier import load_production as load_distress
 from asciip_ml_models.factor.regression import load_production as load_factor
 from asciip_ml_models.forecast import ForecastConfig, train_commodity_ensemble
-from asciip_ml_models.margin.ridge import load_production as load_margin
 from asciip_ml_models.montecarlo import MonteCarloConfig, ShockSpec, run_simulation
 from asciip_ml_models.valuation import (
     DCFAssumptions,
@@ -33,7 +29,7 @@ from asciip_ml_models.valuation import (
     run_dcf,
     two_way_sensitivity,
 )
-
+from asciip_shared import get_logger, get_settings
 
 # --------------------------------------------------------------------- pricing
 
@@ -63,9 +59,7 @@ def get_commodity_panel(lookback_days: int = 365) -> dict[str, Any]:
 
     by_entity: dict[str, list[dict[str, Any]]] = {c: [] for c in COMMODITIES}
     for entity_id, as_of_ts, value in rows:
-        by_entity.setdefault(entity_id, []).append(
-            {"as_of_ts": as_of_ts, "price": float(value)}
-        )
+        by_entity.setdefault(entity_id, []).append({"as_of_ts": as_of_ts, "price": float(value)})
 
     latest_vol: dict[str, float] = {}
     for entity_id, value in vol_rows:
@@ -97,7 +91,7 @@ def commodity_forecast(entity_id: str, horizon_days: int = 30) -> dict[str, Any]
     result = train_commodity_ensemble(cfg)
     history_tail = [
         {"as_of_ts": ts, "price": price}
-        for ts, price in zip(result.history_index[-60:], result.history_values[-60:])
+        for ts, price in zip(result.history_index[-60:], result.history_values[-60:], strict=False)
     ]
     forecast = [
         {"ts": ts, "mean": m, "lower": lo, "upper": hi}
@@ -106,6 +100,7 @@ def commodity_forecast(entity_id: str, horizon_days: int = 30) -> dict[str, Any]
             result.forecast_mean,
             result.forecast_lower,
             result.forecast_upper,
+            strict=False,
         )
     ]
     log.info(
@@ -152,9 +147,7 @@ def aapl_history(lookback_days: int = 365) -> dict[str, Any]:
 def factor_report() -> dict[str, Any]:
     model = load_factor()
     if model is None:
-        raise RuntimeError(
-            "factor model has not been trained yet — run `make train-factor`"
-        )
+        raise RuntimeError("factor model has not been trained yet — run `make train-factor`")
     factors = [
         {
             "name": name,
@@ -163,7 +156,7 @@ def factor_report() -> dict[str, Any]:
             "t_value": model.tvalues.get(name, 0.0),
             "p_value": model.pvalues.get(name, 1.0),
         }
-        for name in ("const",) + model.factor_names
+        for name in ("const", *model.factor_names)
     ]
     return {
         "r_squared": model.r_squared,
@@ -184,7 +177,7 @@ def _is_missing(value: Any) -> bool:
         return value.strip() == ""
     if isinstance(value, float):
         return math.isnan(value)
-    return bool(pd.isna(value)) if not isinstance(value, (dict, list, tuple, set)) else False
+    return bool(pd.isna(value)) if not isinstance(value, dict | list | tuple | set) else False
 
 
 def _as_float(value: Any) -> float | None:
@@ -210,7 +203,7 @@ def _supplier_id_from_row(row: dict[str, Any]) -> str:
     if not _is_missing(raw):
         return str(raw)
     name = str(row.get("name") or "supplier").strip()
-    digest = hashlib.sha1(name.encode("utf-8")).hexdigest()[:12]
+    digest = hashlib.sha256(name.encode("utf-8")).hexdigest()[:12]
     return f"sup-{digest}"
 
 
@@ -279,7 +272,6 @@ def supplier_distress(supplier_id: str) -> dict[str, Any]:
         model_version = model.version
         # Simple driver explanation: top numeric features by |z-score|
         # relative to the synthetic cohort means.
-        cohort = store
         for feature in model.numeric_columns:
             value = record.get(feature)
             if value is None:
@@ -322,20 +314,22 @@ def list_events(*, severity: str | None = None, limit: int = 50) -> dict[str, An
 
     events = []
     for row in rows:
-        events.append({
-            "id": row[0],
-            "as_of_ts": row[1],
-            "event_type": row[2],
-            "title": row[3],
-            "summary": row[4],
-            "source_name": row[5],
-            "source_url": row[6],
-            "impact_usd": float(row[7]),
-            "severity": row[8],
-            "margin_delta_bps": int(row[9]) if row[9] is not None else None,
-            "ev_delta_usd": float(row[10]) if row[10] is not None else None,
-            "affected_supplier_ids": (row[11] or "").split(",") if row[11] else [],
-        })
+        events.append(
+            {
+                "id": row[0],
+                "as_of_ts": row[1],
+                "event_type": row[2],
+                "title": row[3],
+                "summary": row[4],
+                "source_name": row[5],
+                "source_url": row[6],
+                "impact_usd": float(row[7]),
+                "severity": row[8],
+                "margin_delta_bps": int(row[9]) if row[9] is not None else None,
+                "ev_delta_usd": float(row[10]) if row[10] is not None else None,
+                "affected_supplier_ids": (row[11] or "").split(",") if row[11] else [],
+            }
+        )
 
     # If the events table is empty (first boot), fall back to the synthetic seed snapshot.
     if not events:
@@ -364,20 +358,22 @@ def _events_from_seed_snapshot(*, severity: str | None, limit: int) -> list[dict
     df = df.head(limit)
     out: list[dict[str, Any]] = []
     for _, row in df.iterrows():
-        out.append({
-            "id": str(row.get("id") or uuid.uuid4().hex),
-            "as_of_ts": row.get("as_of_ts"),
-            "event_type": str(row.get("event_type") or "commodity"),
-            "title": str(row.get("title") or "Disruption event"),
-            "summary": str(row.get("summary") or ""),
-            "source_name": str(row.get("source_name") or "synthetic"),
-            "source_url": row.get("source_url"),
-            "impact_usd": float(row.get("impact_usd") or 0.0),
-            "severity": str(row.get("severity") or "medium"),
-            "margin_delta_bps": int(row.get("margin_delta_bps") or 0) or None,
-            "ev_delta_usd": float(row.get("ev_delta_usd") or 0.0) or None,
-            "affected_supplier_ids": [],
-        })
+        out.append(
+            {
+                "id": str(row.get("id") or uuid.uuid4().hex),
+                "as_of_ts": row.get("as_of_ts"),
+                "event_type": str(row.get("event_type") or "commodity"),
+                "title": str(row.get("title") or "Disruption event"),
+                "summary": str(row.get("summary") or ""),
+                "source_name": str(row.get("source_name") or "synthetic"),
+                "source_url": row.get("source_url"),
+                "impact_usd": float(row.get("impact_usd") or 0.0),
+                "severity": str(row.get("severity") or "medium"),
+                "margin_delta_bps": int(row.get("margin_delta_bps") or 0) or None,
+                "ev_delta_usd": float(row.get("ev_delta_usd") or 0.0) or None,
+                "affected_supplier_ids": [],
+            }
+        )
     return out
 
 
@@ -440,7 +436,9 @@ def run_monte_carlo(payload: dict[str, Any], *, sample_size: int = 256) -> dict[
     # Down-sample to a reasonable payload size for the histogram chart.
     rng = np.random.default_rng(cfg.seed)
     idx = rng.choice(result.n_trials, size=min(sample_size, result.n_trials), replace=False)
-    summary["implied_price_samples"] = [float(v) for v in result.implied_price_samples[np.sort(idx)]]
+    summary["implied_price_samples"] = [
+        float(v) for v in result.implied_price_samples[np.sort(idx)]
+    ]
     return summary
 
 
@@ -525,24 +523,22 @@ def estimate_commodity_ate(payload: dict[str, Any]) -> dict[str, Any]:
     prices = pd.Series(
         {pd.Timestamp(r[0]).normalize(): float(r[1]) for r in price_rows}
     ).sort_index()
-    aapl = pd.Series(
-        {pd.Timestamp(r[0]).normalize(): float(r[1]) for r in aapl_rows}
-    ).sort_index()
-    fx = pd.Series(
-        {pd.Timestamp(r[0]).normalize(): float(r[1]) for r in fx_rows}
-    ).sort_index()
+    aapl = pd.Series({pd.Timestamp(r[0]).normalize(): float(r[1]) for r in aapl_rows}).sort_index()
+    fx = pd.Series({pd.Timestamp(r[0]).normalize(): float(r[1]) for r in fx_rows}).sort_index()
 
     commodity_ret = np.log(prices / prices.shift(1))
     fx_ret = np.log(fx / fx.shift(1))
     market_lag1 = aapl.rolling(5).mean().shift(1)
     fx_lag1 = fx_ret.shift(1)
 
-    panel = pd.DataFrame({
-        "treatment": commodity_ret,
-        "outcome": aapl,
-        "market_lag1": market_lag1,
-        "fx_change_lag1": fx_lag1,
-    }).dropna()
+    panel = pd.DataFrame(
+        {
+            "treatment": commodity_ret,
+            "outcome": aapl,
+            "market_lag1": market_lag1,
+            "fx_change_lag1": fx_lag1,
+        }
+    ).dropna()
 
     if len(panel) < 60:
         raise RuntimeError(
@@ -585,15 +581,17 @@ def list_alerts(*, unacknowledged_only: bool = False, limit: int = 100) -> dict[
         rows = con.execute(sql, [limit]).fetchall()
     alerts = []
     for row in rows:
-        alerts.append({
-            "id": row[0],
-            "created_at": row[1],
-            "event_id": row[2],
-            "severity": row[3],
-            "acknowledged_at": row[4],
-            "channel": row[5],
-            "payload": json.loads(row[6]) if row[6] else {},
-        })
+        alerts.append(
+            {
+                "id": row[0],
+                "created_at": row[1],
+                "event_id": row[2],
+                "severity": row[3],
+                "acknowledged_at": row[4],
+                "channel": row[5],
+                "payload": json.loads(row[6]) if row[6] else {},
+            }
+        )
     return {"count": len(alerts), "alerts": alerts}
 
 

@@ -5,14 +5,12 @@ from __future__ import annotations
 import asyncio
 
 import pytest
-
 from asciip_shared.correlation import (
     bind_correlation_id,
     get_correlation_id,
     new_correlation_id,
     reset_correlation_id,
 )
-
 
 pytestmark = pytest.mark.unit
 

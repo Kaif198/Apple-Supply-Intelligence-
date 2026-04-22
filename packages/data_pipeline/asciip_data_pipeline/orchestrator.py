@@ -15,7 +15,6 @@ from pathlib import Path
 from uuid import uuid4
 
 import polars as pl
-
 from asciip_shared import (
     SourceMetadata,
     bind_correlation_id,
@@ -28,9 +27,9 @@ from asciip_shared.correlation import reset_correlation_id
 # Register every adapter for the default registry.
 from asciip_data_pipeline import synthetic
 from asciip_data_pipeline.audit import record_fetch, snapshot_parquet_sidecar
-from asciip_data_pipeline.sources import default_registry
 from asciip_data_pipeline.sources import apple_supplier_pdf as _apple_pdf  # noqa: F401
 from asciip_data_pipeline.sources import comtrade as _comtrade  # noqa: F401
+from asciip_data_pipeline.sources import default_registry
 from asciip_data_pipeline.sources import drewry as _drewry  # noqa: F401
 from asciip_data_pipeline.sources import ecb as _ecb  # noqa: F401
 from asciip_data_pipeline.sources import finnhub as _finnhub  # noqa: F401
